@@ -1,0 +1,180 @@
+from datetime import datetime, timedelta
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from app import db
+from security import SecurityUtils, PasswordSecurity
+import re
+import secrets
+import string
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    # For future password authentication
+    password_hash = db.Column(db.String(128))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
+
+    # Security fields
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    account_locked_until = db.Column(db.DateTime)
+    last_password_change = db.Column(db.DateTime)
+
+    # Profile fields
+    name = db.Column(db.String(100))
+    age = db.Column(db.Integer)
+    education = db.Column(db.String(200))
+    interests = db.Column(db.Text)
+    country = db.Column(db.String(100))
+    profile_completed = db.Column(db.Boolean, default=False)
+    # Store filename of uploaded image
+    profile_image = db.Column(db.String(200))
+
+    # Contact information (optional, for sharing with mutual matches)
+    whatsapp = db.Column(db.String(20))
+    instagram = db.Column(db.String(50))
+    discord = db.Column(db.String(50))
+    linkedin = db.Column(db.String(100))
+    other_contact = db.Column(db.String(200))
+
+    @staticmethod
+    def validate_email(email):
+        """Enhanced email validation with security checks"""
+        return SecurityUtils.validate_email_security(email)
+
+    def set_password(self, password):
+        """Set password with security validation"""
+        is_valid, message = PasswordSecurity.validate_password_strength(
+            password)
+        if not is_valid:
+            raise ValueError(message)
+
+        self.password_hash = PasswordSecurity.hash_password(password)
+        self.last_password_change = datetime.utcnow()
+        self.failed_login_attempts = 0
+        self.account_locked_until = None
+
+    def check_password(self, password):
+        """Check password against hash"""
+        if not self.password_hash:
+            return False
+        return PasswordSecurity.verify_password(password, self.password_hash)
+
+    def is_account_locked(self):
+        """Check if account is temporarily locked"""
+        if self.account_locked_until and datetime.utcnow() < self.account_locked_until:
+            return True
+        return False
+
+    def record_failed_login(self):
+        """Record failed login attempt and lock account if needed"""
+        self.failed_login_attempts += 1
+        if self.failed_login_attempts >= 5:
+            # Lock account for 1 hour after 5 failed attempts
+            self.account_locked_until = datetime.utcnow() + timedelta(hours=1)
+
+    def record_successful_login(self):
+        """Reset failed login attempts on successful login"""
+        self.failed_login_attempts = 0
+        self.account_locked_until = None
+        self.last_login = datetime.utcnow()
+
+    def __repr__(self):
+        return f'<User {self.email}>'
+
+
+class PermanentLoginLink(db.Model):
+    __tablename__ = 'permanent_login_links'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+
+    user = db.relationship('User', backref=db.backref(
+        'permanent_links', lazy=True))
+
+    @staticmethod
+    def generate_token():
+        """Generate a secure random token"""
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(32))
+
+    @staticmethod
+    def create_or_get_link(user_id):
+        """Create a new permanent link or get existing active one for a user"""
+        # Check if user already has an active permanent link
+        existing_link = PermanentLoginLink.query.filter_by(
+            user_id=user_id,
+            is_active=True
+        ).first()
+
+        if existing_link:
+            return existing_link
+
+        # Create new permanent link
+        token = PermanentLoginLink.generate_token()
+        permanent_link = PermanentLoginLink(
+            token=token,
+            user_id=user_id
+        )
+
+        db.session.add(permanent_link)
+        db.session.commit()
+
+        return permanent_link
+
+    def is_valid(self):
+        """Check if link is still valid"""
+        return self.is_active
+
+    def use_link(self):
+        """Update last used timestamp"""
+        self.last_used = datetime.utcnow()
+        db.session.commit()
+
+    def deactivate(self):
+        """Deactivate the link"""
+        self.is_active = False
+        db.session.commit()
+
+    def __repr__(self):
+        return f'<PermanentLoginLink {self.token[:8]}... for {self.user.email}>'
+
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    liker_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    liked_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
+    liker = db.relationship('User', foreign_keys=[liker_id])
+    liked = db.relationship('User', foreign_keys=[liked_id])
+
+    def __repr__(self):
+        return f'<Like {self.liker.email} -> {self.liked.email}>'
+
+    @staticmethod
+    def get_liked_by_user(current_user):
+        """Get users who liked the current user"""
+        liked_by = User.query.join(Like, Like.liker_id == User.id).filter(
+            Like.liked_id == current_user.id).all()
+        return liked_by
+
+
+class Swipe(db.Model):
+    __tablename__ = 'swipes'
+    id = db.Column(db.Integer, primary_key=True)
+    swiper_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), nullable=False)
+    swiped_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), nullable=False)
+    action = db.Column(db.String(10), nullable=False)  # 'like' or 'decline'
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())

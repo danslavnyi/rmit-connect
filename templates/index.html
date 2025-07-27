@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}RMIT Connect - Meet Your RMIT Crew{% endblock %}
+
+{% block content %}
+<!-- Hero Section with RMIT Branding -->
+<section class="rmit-hero">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-10">
+                <div class="mb-4">
+                    <i class="bi bi-people-fill" style="font-size: 4rem; color: var(--rmit-aqua);"></i>
+                </div>
+                <h1 class="display-2 fw-bold text-white mb-3">RMIT Connect</h1>
+                <p class="lead fs-4 mb-4">Swipe for real uni friends. Connect with bold, collaborative RMIT students who share your energy and ambition.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Start Connecting</a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- Features Grid -->
+    <section id="features" class="py-5">
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <i class="bi bi-mortarboard-fill" style="font-size: 3rem; color: var(--rmit-aqua);"></i>
+                    </div>
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Study Together</h4>
+                        <p class="card-text">Find study partners for your courses, form study groups, and ace those assignments with your RMIT crew!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <i class="bi bi-heart-fill" style="font-size: 3rem; color: var(--rmit-red);"></i>
+                    </div>
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Make Real Friends</h4>
+                        <p class="card-text">Connect based on shared interests, energy, and RMIT spirit - build friendships that last beyond graduation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <i class="bi bi-lightning-charge-fill" style="font-size: 3rem; color: var(--rmit-lavender);"></i>
+                    </div>
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Your Shortcut in Making Friends</h4>
+                        <p class="card-text">Skip the awkward introductions - connect instantly with like-minded RMIT students who share your vibe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+            </div>
+
+    <!-- Call to Action Section -->
+    <section class="py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center rounded-4 p-5" style="background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue)); color: white;">
+                    <h3 class="mb-4 fw-bold cta-heading">Ready to Start Connecting?</h3>
+                    <p class="mb-4 fs-5">Join bold, collaborative RMIT students making real connections on campus</p>
+                    <div class="d-grid gap-2 d-md-block">
+                        <a href="{{ url_for('login') }}" class="btn btn-lg px-5 py-3 start-connecting-btn" 
+                           style="background-color: var(--rmit-aqua); color: var(--rmit-black); font-weight: 600; border: none; transition: all 0.3s ease;"
+                           onmouseover="this.style.backgroundColor='#00b89e'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,220,180,0.4)';"
+                           onmouseout="this.style.backgroundColor='var(--rmit-aqua)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                           onmousedown="this.style.transform='translateY(0) scale(0.98)';"
+                           onmouseup="this.style.transform='translateY(-2px) scale(1)';">
+                            <i class="bi bi-person-plus-fill"></i> Start Connecting Now
+                        </a>
+                    </div>
+                    <p class="mt-3 opacity-75">
+                        <small>Quick signup with just your RMIT email - no passwords needed!</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-star-fill" style="color: var(--rmit-aqua);"></i>
+                    <i class="bi bi-star-fill" style="color: var(--rmit-aqua);"></i>
+                    <i class="bi bi-star-fill" style="color: var(--rmit-aqua);"></i>
+                    <i class="bi bi-star-fill" style="color: var(--rmit-aqua);"></i>
+                    <i class="bi bi-star-fill" style="color: var(--rmit-aqua);"></i>
+                </div>
+                <blockquote class="blockquote">
+                    <p class="mb-0 fs-5">"I found my RMIT crew through RMIT Connect. University became so much more collaborative and fun!"</p>
+                </blockquote>
+                <figcaption class="blockquote-footer mt-2" style="color: var(--rmit-blue);">
+                    Alex, <cite title="RMIT University">Engineering Student</cite>
+                </figcaption>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

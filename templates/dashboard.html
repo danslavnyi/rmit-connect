@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}My RMIT Connect Profile{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Welcome Header -->
+            <div class="text-center mb-5">
+                <i class="bi bi-people-fill display-1 mb-3" style="color: var(--rmit-red);"></i>
+                <h1 class="display-5 fw-bold">Welcome to RMIT Connect!</h1>
+                <p class="lead" style="color: var(--rmit-blue);">Your bold, collaborative RMIT crew awaits - start building connections today</p>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-person-vcard"></i> Your RMIT Connect Profile
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- Profile Image -->
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="position-relative d-inline-block">
+                                {% if user.profile_image %}
+                                    <img src="{{ url_for('uploaded_file', filename=user.profile_image) }}" 
+                                         class="rounded-circle border border-3 shadow" 
+                                         width="120" height="120" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
+                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview">
+                                {% else %}
+                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
+                                         style="width: 120px; height: 120px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
+                                        <i class="bi bi-person-fill text-muted" style="font-size: 3rem;"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Edit Button -->
+                                <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute" 
+                                        style="bottom: 5px; right: 5px; width: 35px; height: 35px; border-color: var(--rmit-red); background-color: var(--rmit-red); display: flex; align-items: center; justify-content: center;"
+                                        onclick="triggerImageUpload()" title="Change profile photo">
+                                    <i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>
+                                </button>
+                                
+                                <!-- Hidden file input -->
+                                <input type="file" id="profile-image-input" accept=".png,.jpg,.jpeg,.gif,.webp" 
+                                       style="display: none;" onchange="uploadProfileImage(this)">
+                            </div>
+                        </div>
+                        
+                        <!-- Profile Info -->
+                        <div class="col-md-9">
+                            <div class="row">
+                        <div class="col-md-6">
+                            <h6 style="color: var(--rmit-blue);">Name</h6>
+                            <p class="mb-3">{{ user.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Age</h6>
+                            <p class="mb-3">{{ user.age }} years old</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Education</h6>
+                            <p class="mb-3">{{ user.education }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Country</h6>
+                            <p class="mb-3">{{ user.country }}</p>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-muted">Interests & Hobbies</h6>
+                            <p class="mb-3">{{ user.interests }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Email Address</h6>
+                            <p class="mb-3">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Member Since</h6>
+                            <p class="mb-3">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                            </div> <!-- Close profile info row -->
+                        </div> <!-- Close profile info column -->
+                    </div> <!-- Close main row -->
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-heart-fill"></i> My Connections 
+                                    {% if mutual_matches %}
+                                        <span class="badge bg-danger ms-1">{{ mutual_matches|length }}</span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('history') }}" class="btn btn-outline-dark" style="border-color: var(--rmit-blue); color: var(--rmit-blue);" 
+                                   onmouseover="this.style.backgroundColor='var(--rmit-blue)'; this.style.color='white';" 
+                                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--rmit-blue)';">
+                                    <i class="bi bi-clock-history"></i> My History
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-primary" onclick="showAccountSettings()">
+                                    <i class="bi bi-gear"></i> Edit profile
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                                    <i class="bi bi-box-arrow-right"></i> Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Account Settings -->
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('profile') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Account Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" class="form-control" id="age" name="age" value="{{ user.age }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="education" class="form-label">Education</label>
+                        <input type="text" class="form-control" id="education" name="education" value="{{ user.education }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="country" name="country" value="{{ user.country }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="interests" class="form-label">Interests & Hobbies</label>
+                        <textarea class="form-control" id="interests" name="interests">{{ user.interests }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Security Info -->
+<div class="modal fade" id="securityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Security Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Your account is protected by:</h6>
+                <ul>
+                    <li><strong>Passwordless Authentication:</strong> No passwords to steal or forget - access via secure email links
+                    </li>
+                    <li><strong>Permanent Link Security:</strong> Each login link is unique and permanent - no expiration!</li>
+                    <li><strong>Session Management:</strong> Secure session cookies with proper expiration</li>
+                    <li><strong>Database Security:</strong> PostgreSQL database with encrypted connections</li>
+                    <li><strong>Input Validation:</strong> All user inputs are validated and sanitized</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Your permanent login link is unique to you and never expires - bookmark it for instant access!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Interactions -->
+<div class="modal fade" id="interactionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Users Who Liked You</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if liked_by %}
+                    <ul class="list-group">
+                        {% for liker in liked_by %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('explore_user', user_id=liker.id) }}" class="btn btn-outline-info w-100">
+                                <strong>{{ liker.name }}</strong> ({{ liker.email }})
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info">No interactions yet.</div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAccountSettings() {
+    const modal = new bootstrap.Modal(document.getElementById('accountModal'));
+    modal.show();
+}
+
+function showSecurityInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('securityModal'));
+    modal.show();
+}
+
+function showInteractions() {
+    const modal = new bootstrap.Modal(document.getElementById('interactionsModal'));
+    modal.show();
+}
+
+// Profile image upload functions
+function triggerImageUpload() {
+    document.getElementById('profile-image-input').click();
+}
+
+function uploadProfileImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('❌ File size must be less than 5MB');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('❌ Please select a valid image file (PNG, JPG, GIF, WebP)');
+            input.value = '';
+            return;
+        }
+        
+        // Show loading indicator
+        const editBtn = document.querySelector('.btn-primary.rounded-circle');
+        editBtn.innerHTML = '⏳';
+        editBtn.disabled = true;
+        
+        // Preview image immediately
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('profile-image-preview');
+            if (preview.tagName === 'IMG') {
+                preview.src = e.target.result;
+            } else {
+                // Replace placeholder with image
+                const imgElement = document.createElement('img');
+                imgElement.src = e.target.result;
+                imgElement.className = 'rounded-circle border border-3 shadow';
+                imgElement.style.width = '120px';
+                imgElement.style.height = '120px';
+                imgElement.style.objectFit = 'cover';
+                imgElement.style.borderColor = 'var(--rmit-red)';
+                imgElement.alt = "{{ user.name }}'s profile photo";
+                imgElement.id = 'profile-image-preview';
+                preview.parentNode.replaceChild(imgElement, preview);
+            }
+        };
+        reader.readAsDataURL(file);
+        
+        // Upload image via AJAX
+        const formData = new FormData();
+        formData.append('profile_image', file);
+        
+        fetch('{{ url_for("profile") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Reset button
+            editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
+            editBtn.disabled = false;
+            
+            // Check if upload was successful by looking for success message in response
+            if (html.includes('Image uploaded successfully') || html.includes('✅')) {
+                // Show success message
+                showNotification('✅ Profile photo updated successfully!', 'success');
+            } else if (html.includes('danger') || html.includes('❌')) {
+                // Show error message
+                showNotification('❌ Failed to upload image. Please try again.', 'error');
+            } else {
+                // Generic success (page redirected)
+                showNotification('✅ Profile photo updated!', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
+            editBtn.disabled = false;
+            showNotification('❌ Network error. Please try again.', 'error');
+        });
+    }
+}
+
+// Notification system
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Auto-show profile modal for new users
+{% if force_profile_modal %}
+document.addEventListener('DOMContentLoaded', function() {
+    showAccountSettings();
+});
+{% endif %}
+</script>
+
+
+
+{% endblock %}
