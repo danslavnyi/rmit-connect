@@ -19,8 +19,8 @@ requests==2.32.4
 Jinja2==3.1.6
 MarkupSafe==3.0.2
 
-# Image processing
-Pillow==10.1.0
+# Image processing - Updated for Python 3.13 compatibility
+Pillow==10.4.0
 
 # Environment and production
 python-dotenv==1.0.0
