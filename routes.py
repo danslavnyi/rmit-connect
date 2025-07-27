@@ -190,10 +190,10 @@ def login():
             flash('Login link has been sent to your email!', 'success')
             flash('Check your inbox for your permanent login link.', 'info')
         else:
-            flash(
-                'Error sending email. Please check your email configuration.', 'warning')
-            # Fallback: show the link for development/testing
-            flash(f'Your permanent login link: {login_url}', 'info')
+            # Show link directly for now (email not configured)
+            flash('Email service temporarily unavailable.', 'warning')
+            flash(f'Your login link: {login_url}', 'info')
+            app.logger.info(f"Email not sent, showing direct link: {login_url}")
             app.logger.warning(f"Email sending failed: {message}")
 
     return render_template('login.html')
