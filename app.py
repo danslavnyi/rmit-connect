@@ -2,10 +2,11 @@ from security import secure_headers, generate_csrf_token
 from config import get_config
 import os
 import logging
-from flask import Flask, g
+from flask import Flask, g, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_compress import Compress
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -34,6 +35,9 @@ app = Flask(__name__)
 config = get_config()
 app.config.from_object(config)
 
+# Initialize compression for better performance
+compress = Compress(app)
+
 # Apply proxy fix for production deployment (important for Heroku)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -53,6 +57,21 @@ login_manager.session_protection = "strong"  # Enhanced session protection
 
 # Apply security headers to all responses
 app.after_request(secure_headers())
+
+# Add performance optimizations
+@app.after_request
+def add_performance_headers(response):
+    # Cache static files for 1 year
+    if 'static' in request.path:
+        response.cache_control.max_age = 31536000  # 1 year
+        response.cache_control.public = True
+    
+    # Add compression hints
+    if response.content_type and any(mime in response.content_type for mime in 
+                                   ['text/', 'application/json', 'application/javascript']):
+        response.headers['Vary'] = 'Accept-Encoding'
+    
+    return response
 
 # Make CSRF token available in templates
 

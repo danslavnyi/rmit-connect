@@ -2,7 +2,7 @@ from app import app, db, mail
 from models import User, PermanentLoginLink, Like, Swipe
 from email_templates import get_login_email_html
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_from_directory, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_, exists
@@ -16,6 +16,7 @@ from email.mime.multipart import MIMEMultipart
 import os
 import uuid
 import re
+import time
 
 # Upload settings
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -922,6 +923,36 @@ def swipe(user_id, action):
         app.logger.error(f"Error in swipe: {str(e)}")
         abort(500)
     return '', 204
+
+
+# Performance and SEO routes
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring"""
+    start_time = time.time()
+    try:
+        # Test database connection
+        db.session.execute('SELECT 1')
+        db_status = 'ok'
+    except Exception as e:
+        db_status = f'error: {str(e)}'
+    
+    response_time = (time.time() - start_time) * 1000  # in milliseconds
+    
+    return jsonify({
+        'status': 'healthy' if db_status == 'ok' else 'unhealthy',
+        'database': db_status,
+        'response_time_ms': round(response_time, 2),
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Serve robots.txt for SEO"""
+    response = make_response(send_from_directory(app.static_folder, 'robots.txt'))
+    response.headers['Content-Type'] = 'text/plain'
+    return response
 
 
 @app.errorhandler(404)

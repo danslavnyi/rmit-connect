@@ -32,8 +32,19 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "echo": False  # Disable SQL logging for performance
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Performance optimizations
+    SEND_FILE_MAX_AGE_DEFAULT = 31536000  # 1 year cache for static files
+    COMPRESS_MIMETYPES = [
+        'text/html', 'text/css', 'text/xml', 'application/json',
+        'application/javascript', 'text/javascript', 'image/svg+xml'
+    ]
 
     # Security Headers
     FORCE_HTTPS = True
@@ -81,6 +92,16 @@ class ProductionConfig(Config):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
     SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///campusconnect.db'
+    
+    # Enhanced database configuration for production
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+        "pool_size": 20,  # Increased for production
+        "max_overflow": 40,  # Increased for production
+        "pool_timeout": 30,
+        "echo": False
+    }
 
     # Email configuration for production
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')

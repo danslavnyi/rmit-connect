@@ -30,7 +30,7 @@
                                     <img src="{{ url_for('uploaded_file', filename=user.profile_image) }}" 
                                          class="rounded-circle border border-3 shadow" 
                                          width="120" height="120" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
-                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview">
+                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
                                 {% else %}
                                     <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
                                          style="width: 120px; height: 120px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
