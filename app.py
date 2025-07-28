@@ -59,18 +59,20 @@ login_manager.session_protection = "strong"  # Enhanced session protection
 app.after_request(secure_headers())
 
 # Add performance optimizations
+
+
 @app.after_request
 def add_performance_headers(response):
     # Cache static files for 1 year
     if 'static' in request.path:
         response.cache_control.max_age = 31536000  # 1 year
         response.cache_control.public = True
-    
+
     # Add compression hints
-    if response.content_type and any(mime in response.content_type for mime in 
-                                   ['text/', 'application/json', 'application/javascript']):
+    if response.content_type and any(mime in response.content_type for mime in
+                                     ['text/', 'application/json', 'application/javascript']):
         response.headers['Vary'] = 'Accept-Encoding'
-    
+
     return response
 
 # Make CSRF token available in templates

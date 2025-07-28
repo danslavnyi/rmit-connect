@@ -936,9 +936,9 @@ def health_check():
         db_status = 'ok'
     except Exception as e:
         db_status = f'error: {str(e)}'
-    
+
     response_time = (time.time() - start_time) * 1000  # in milliseconds
-    
+
     return jsonify({
         'status': 'healthy' if db_status == 'ok' else 'unhealthy',
         'database': db_status,
@@ -950,7 +950,8 @@ def health_check():
 @app.route('/robots.txt')
 def robots_txt():
     """Serve robots.txt for SEO"""
-    response = make_response(send_from_directory(app.static_folder, 'robots.txt'))
+    response = make_response(send_from_directory(
+        app.static_folder, 'robots.txt'))
     response.headers['Content-Type'] = 'text/plain'
     return response
 
