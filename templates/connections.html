@@ -45,12 +45,12 @@
                                         <div class="contact-info">
                                             <h6 class="text-muted mb-2">Contact {{ match.name }}:</h6>
                                             
-                                            {% if match.whatsapp %}
+                                            {% if match.phone_number %}
                                             <div class="mb-2">
                                                 <i class="bi bi-phone text-success"></i>
-                                                <a href="tel:{{ match.whatsapp }}" 
+                                                <a href="tel:{{ match.phone_number }}" 
                                                    target="_blank" class="text-decoration-none ms-2">
-                                                    {{ match.whatsapp }}
+                                                    {{ match.phone_number }}
                                                 </a>
                                             </div>
                                             {% endif %}
@@ -89,7 +89,7 @@
                                             </div>
                                             {% endif %}
                                             
-                                            {% if not (match.whatsapp or match.instagram or match.discord or match.linkedin or match.other_contact) %}
+                                            {% if not (match.phone_number or match.instagram or match.discord or match.linkedin or match.other_contact) %}
                                             <div class="text-muted fst-italic small" style="opacity: 0.5;">
                                                 <i class="bi bi-info-circle-fill" style="font-size: 0.8em;"></i>
                                                 <span class="ms-1">Contact info not provided</span>
@@ -153,14 +153,14 @@
                         </style>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="whatsapp" class="form-label" style="opacity: {{ '1' if user.whatsapp else '0.6' }};">
+                                <label for="phone_number" class="form-label" style="opacity: {{ '1' if user.phone_number else '0.6' }};">
                                     <i class="bi bi-phone text-success"></i> Phone Number
                                 </label>
-                                <input type="tel" class="form-control" id="whatsapp" name="whatsapp" 
-                                       value="{{ user.whatsapp or '' }}" placeholder="+61 123 456 789"
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                       value="{{ user.phone_number or '' }}" placeholder="+61 123 456 789"
                                        pattern="[+]?[0-9\s\-\(\)]{8,20}"
                                        title="Please enter a valid phone number (8-15 digits, may include +, spaces, dashes, parentheses)">
-                                <div class="form-text" style="opacity: {{ '1' if user.whatsapp else '0.5' }};">
+                                <div class="form-text" style="opacity: {{ '1' if user.phone_number else '0.5' }};">
                                     <small class="text-muted">Format: +61 123 456 789 or 0123456789</small>
                                 </div>
                             </div>

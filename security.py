@@ -8,7 +8,6 @@ import secrets
 import re
 from functools import wraps
 from flask import request, abort, g
-from werkzeug.security import generate_password_hash, check_password_hash
 import time
 
 
@@ -147,39 +146,6 @@ def generate_csrf_token():
     if 'csrf_token' not in g:
         g.csrf_token = SecurityUtils.generate_secure_token(16)
     return g.csrf_token
-
-
-class PasswordSecurity:
-    """Password security utilities"""
-
-    @staticmethod
-    def validate_password_strength(password):
-        """Validate password meets security requirements"""
-        if not password or len(password) < 8:
-            return False, "Password must be at least 8 characters long"
-
-        if len(password) > 128:
-            return False, "Password too long"
-
-        # Check for complexity (optional for student app)
-        has_upper = re.search(r'[A-Z]', password)
-        has_lower = re.search(r'[a-z]', password)
-        has_digit = re.search(r'[0-9]', password)
-
-        if not (has_upper and has_lower and has_digit):
-            return False, "Password should contain uppercase, lowercase, and numbers"
-
-        return True, "Password is strong"
-
-    @staticmethod
-    def hash_password(password):
-        """Hash password securely"""
-        return generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
-
-    @staticmethod
-    def verify_password(password, password_hash):
-        """Verify password against hash"""
-        return check_password_hash(password_hash, password)
 
 
 def secure_headers():

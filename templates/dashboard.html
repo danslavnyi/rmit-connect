@@ -164,6 +164,11 @@
                         <input type="text" class="form-control" id="country" name="country" value="{{ user.country }}">
                     </div>
                     <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number }}" placeholder="+61 123 456 789">
+                        <div class="form-text">Enter your phone number for connections to reach you</div>
+                    </div>
+                    <div class="mb-3">
                         <label for="interests" class="form-label">Interests & Hobbies</label>
                         <textarea class="form-control" id="interests" name="interests">{{ user.interests }}</textarea>
                     </div>

@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from app import db
-from security import SecurityUtils, PasswordSecurity
-import re
+from security import SecurityUtils
 import secrets
 import string
 
@@ -13,15 +12,12 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    # For future password authentication
-    password_hash = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
 
     # Security fields
     failed_login_attempts = db.Column(db.Integer, default=0)
     account_locked_until = db.Column(db.DateTime)
-    last_password_change = db.Column(db.DateTime)
 
     # Profile fields
     name = db.Column(db.String(100))
@@ -34,7 +30,7 @@ class User(UserMixin, db.Model):
     profile_image = db.Column(db.String(200))
 
     # Contact information (optional, for sharing with mutual matches)
-    whatsapp = db.Column(db.String(20))
+    phone_number = db.Column(db.String(20))
     instagram = db.Column(db.String(50))
     discord = db.Column(db.String(50))
     linkedin = db.Column(db.String(100))
@@ -44,24 +40,6 @@ class User(UserMixin, db.Model):
     def validate_email(email):
         """Enhanced email validation with security checks"""
         return SecurityUtils.validate_email_security(email)
-
-    def set_password(self, password):
-        """Set password with security validation"""
-        is_valid, message = PasswordSecurity.validate_password_strength(
-            password)
-        if not is_valid:
-            raise ValueError(message)
-
-        self.password_hash = PasswordSecurity.hash_password(password)
-        self.last_password_change = datetime.utcnow()
-        self.failed_login_attempts = 0
-        self.account_locked_until = None
-
-    def check_password(self, password):
-        """Check password against hash"""
-        if not self.password_hash:
-            return False
-        return PasswordSecurity.verify_password(password, self.password_hash)
 
     def is_account_locked(self):
         """Check if account is temporarily locked"""
