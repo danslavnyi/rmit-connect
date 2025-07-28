@@ -956,6 +956,46 @@ def robots_txt():
     return response
 
 
+@app.route('/admin/db-status')
+def admin_db_status():
+    """Check database connection and show info - REMOVE AFTER TESTING"""
+    try:
+        # Test database connection
+        result = db.session.execute('SELECT version()').fetchone()
+        db_version = result[0] if result else 'Unknown'
+        
+        # Get database URL (hide password)
+        db_url = os.environ.get('DATABASE_URL', 'Not set')
+        safe_db_url = db_url.replace(db_url.split(':')[2].split('@')[0], '****') if '@' in db_url else db_url
+        
+        # Test table creation
+        db.create_all()
+        
+        # Count existing tables
+        tables_query = """
+        SELECT table_name FROM information_schema.tables 
+        WHERE table_schema = 'public'
+        """
+        tables_result = db.session.execute(tables_query).fetchall()
+        table_names = [row[0] for row in tables_result]
+        
+        return jsonify({
+            'status': 'Connected to PostgreSQL',
+            'database_url': safe_db_url,
+            'version': db_version,
+            'tables_created': table_names,
+            'environment': os.environ.get('FLASK_ENV', 'production'),
+            'total_tables': len(table_names)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'Database connection failed',
+            'error': str(e),
+            'database_url': 'Check environment variable'
+        }), 500
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html',
