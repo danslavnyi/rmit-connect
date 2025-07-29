@@ -1,10 +1,21 @@
+"""
+Configuration management for RMIT Connect application.
+
+This module contains all configuration classes for different environments
+including development, production, and testing configurations.
+
+Author: RMIT Connect Team
+Version: 1.0.0
+"""
+
 import os
 import secrets
 from datetime import timedelta
+from typing import Dict, Any
 
 
 class Config:
-    """Base configuration with security best practices"""
+    """Base configuration class with security best practices."""
 
     # Security - Secret Key
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32)

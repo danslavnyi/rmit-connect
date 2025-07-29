@@ -1,5 +1,13 @@
-from security import secure_headers, generate_csrf_token
-from config import get_config
+"""
+Flask application factory and configuration for RMIT Connect.
+
+This module initializes the Flask application with all necessary extensions,
+security configurations, and middleware for the RMIT Connect platform.
+
+Author: RMIT Connect Team
+Version: 1.0.0
+"""
+
 import os
 import logging
 from flask import Flask, g, request
@@ -9,6 +17,10 @@ from flask_mail import Mail
 from flask_compress import Compress
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Application imports
+from security import secure_headers, generate_csrf_token
+from config import get_config
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
