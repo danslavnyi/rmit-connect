@@ -105,4 +105,11 @@ with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
     db.create_all()
-    logging.info("Database tables created")
+
+    # Ensure upload folder exists with proper permissions
+    upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder, mode=0o755, exist_ok=True)
+        logging.info(f"Created upload folder: {upload_folder}")
+
+    logging.info("Database tables created and upload folder initialized")

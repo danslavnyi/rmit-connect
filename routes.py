@@ -22,6 +22,15 @@ import time
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
+@app.context_processor
+def inject_image_helpers():
+    """Make image optimization functions available in templates"""
+    return {
+        'get_optimized_image_url': get_optimized_image_url,
+        'image_sizes': ['thumbnail', 'medium', 'large']
+    }
+
+
 def allowed_file(filename):
     """Check if file has allowed extension"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -82,50 +91,210 @@ def validate_user_input(email):
 
 
 def process_image(image_file, user_id):
-    """Process and save uploaded image with security checks"""
+    """
+    Process and optimize uploaded image with advanced compression.
+
+    Features:
+    - Smart resizing with multiple sizes (thumbnail, medium, large)
+    - Aggressive compression while maintaining quality
+    - WebP format conversion for better compression
+    - Progressive JPEG for faster loading
+    - Metadata stripping for privacy and size reduction
+    """
     if not image_file or not allowed_file(image_file.filename):
         return None, "Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP images."
 
     try:
-        # Create unique filename to prevent conflicts
-        file_extension = image_file.filename.rsplit('.', 1)[1].lower()
-        unique_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        # Create unique filename (always save as WebP for best compression)
+        unique_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}.webp"
 
-        # Save original file temporarily
-        temp_path = os.path.join(
-            app.config['UPLOAD_FOLDER'], f"temp_{unique_filename}")
-        image_file.save(temp_path)
+        # Process image directly from memory (no temp file needed)
+        img = Image.open(image_file)
 
-        # Open and validate image with Pillow
-        with Image.open(temp_path) as img:
-            # Convert to RGB if necessary (for JPEG compatibility)
-            if img.mode in ('RGBA', 'P'):
-                img = img.convert('RGB')
+        # Strip EXIF data for privacy and smaller file size
+        img_data = list(img.getdata())
+        img_clean = Image.new(img.mode, img.size)
+        img_clean.putdata(img_data)
 
-            # Resize image if too large (max 800x800 for profile pics)
-            max_size = (800, 800)
-            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        # Convert to RGB for better compression (WebP works best with RGB)
+        if img_clean.mode in ('RGBA', 'P', 'LA'):
+            # Create white background for transparent images
+            background = Image.new('RGB', img_clean.size, (255, 255, 255))
+            if img_clean.mode == 'RGBA':
+                background.paste(img_clean, mask=img_clean.split()[-1])
+            else:
+                background.paste(img_clean)
+            img_clean = background
+        elif img_clean.mode != 'RGB':
+            img_clean = img_clean.convert('RGB')
 
-            # Save processed image
+        # Smart resizing with quality preservation
+        # Multiple sizes for different use cases
+        sizes = {
+            'thumbnail': (150, 150),    # Profile thumbnails
+            'medium': (400, 400),       # Profile cards
+            'large': (800, 800)         # Full profile view
+        }
+
+        saved_files = []
+
+        for size_name, max_size in sizes.items():
+            # Create copy for each size
+            img_resized = img_clean.copy()
+
+            # Smart resize: maintain aspect ratio and crop to square if needed
+            width, height = img_resized.size
+
+            # Make square by cropping to center
+            min_dimension = min(width, height)
+            left = (width - min_dimension) // 2
+            top = (height - min_dimension) // 2
+            right = left + min_dimension
+            bottom = top + min_dimension
+
+            img_square = img_resized.crop((left, top, right, bottom))
+
+            # Resize to target size with high-quality resampling
+            img_final = img_square.resize(max_size, Image.Resampling.LANCZOS)
+
+            # Apply smart sharpening for small images
+            if max_size[0] <= 400:
+                from PIL import ImageFilter
+                img_final = img_final.filter(ImageFilter.UnsharpMask(
+                    radius=1.0, percent=120, threshold=1))
+
+            # Generate filename for this size
+            if size_name == 'large':
+                size_filename = unique_filename  # Main file
+            else:
+                base_name = unique_filename.rsplit('.', 1)[0]
+                size_filename = f"{base_name}_{size_name}.webp"
+
             final_path = os.path.join(
-                app.config['UPLOAD_FOLDER'], unique_filename)
-            img.save(final_path, optimize=True, quality=85)
+                app.config['UPLOAD_FOLDER'], size_filename)
 
-        # Remove temporary file
-        os.remove(temp_path)
-        return unique_filename, "Image uploaded successfully"
+            # Save with optimal WebP settings
+            img_final.save(
+                final_path,
+                'WebP',
+                optimize=True,
+                quality=82 if size_name == 'large' else 75,  # Higher quality for larger images
+                method=6,  # Best compression method
+                lossless=False,
+                exact=False
+            )
+
+            saved_files.append(size_filename)
+
+        # Also create a fallback JPEG for older browsers
+        jpeg_filename = unique_filename.replace('.webp', '.jpg')
+        jpeg_path = os.path.join(app.config['UPLOAD_FOLDER'], jpeg_filename)
+
+        # Resize for JPEG (use medium size)
+        img_jpeg = img_clean.copy()
+        width, height = img_jpeg.size
+        min_dimension = min(width, height)
+        left = (width - min_dimension) // 2
+        top = (height - min_dimension) // 2
+        img_square = img_jpeg.crop(
+            (left, top, left + min_dimension, top + min_dimension))
+        img_jpeg_final = img_square.resize(
+            (400, 400), Image.Resampling.LANCZOS)
+
+        img_jpeg_final.save(
+            jpeg_path,
+            'JPEG',
+            optimize=True,
+            quality=78,
+            progressive=True,  # Progressive JPEG for faster perceived loading
+            subsampling=2,     # Better compression
+            qtables='web_high'  # Web-optimized quality tables
+        )
+
+        # Return the main WebP filename (large size)
+        return unique_filename, f"Image optimized successfully! Generated {len(saved_files) + 1} variants."
 
     except Exception as e:
-        # Clean up temp file if it exists
-        if 'temp_path' in locals() and os.path.exists(temp_path):
-            os.remove(temp_path)
-        return None, f"Error processing image: {str(e)}"
+        app.logger.error(
+            f"Image processing error for user {user_id}: {str(e)}")
+        return None, f"Error processing image: Please try a different image."
 
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    """Serve uploaded files securely"""
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    """Serve uploaded files securely with optimized delivery"""
+    try:
+        # Check if file exists
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(file_path):
+            abort(404)
+
+        # Set cache headers for better performance
+        response = send_from_directory(
+            app.config['UPLOAD_FOLDER'],
+            filename,
+            conditional=True  # Enable conditional requests (304 Not Modified)
+        )
+
+        # Add performance headers
+        response.cache_control.max_age = 31536000  # 1 year cache
+        response.cache_control.public = True
+
+        # Add WebP content type if needed
+        if filename.endswith('.webp'):
+            response.headers['Content-Type'] = 'image/webp'
+
+        return response
+
+    except Exception as e:
+        app.logger.error(f"Error serving file {filename}: {str(e)}")
+        abort(404)
+
+
+@app.route('/uploads/<base_filename>/<size>')
+def uploaded_file_sized(base_filename, size):
+    """Serve different sized versions of uploaded images"""
+    try:
+        # Validate size parameter
+        valid_sizes = ['thumbnail', 'medium', 'large']
+        if size not in valid_sizes:
+            abort(400)
+
+        # Generate sized filename
+        if size == 'large':
+            filename = base_filename
+        else:
+            name_part = base_filename.rsplit('.', 1)[0]
+            filename = f"{name_part}_{size}.webp"
+
+        return uploaded_file(filename)
+
+    except Exception as e:
+        app.logger.error(
+            f"Error serving sized file {base_filename}/{size}: {str(e)}")
+        abort(404)
+
+
+def get_optimized_image_url(filename, size='medium'):
+    """
+    Get URL for optimized image with fallback support.
+
+    Args:
+        filename: Original filename
+        size: 'thumbnail', 'medium', or 'large'
+
+    Returns:
+        URL for the optimized image
+    """
+    if not filename:
+        return None
+
+    if size == 'large':
+        return url_for('uploaded_file', filename=filename)
+    else:
+        base_name = filename.rsplit('.', 1)[0]
+        sized_filename = f"{base_name}_{size}.webp"
+        return url_for('uploaded_file', filename=sized_filename)
 
 
 def send_login_email(email, login_url):

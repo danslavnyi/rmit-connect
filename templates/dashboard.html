@@ -23,18 +23,19 @@
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <!-- Profile Image -->
+                        <!-- Profile Image with Optimization -->
                         <div class="col-md-3 text-center mb-3">
                             <div class="position-relative d-inline-block">
                                 {% if user.profile_image %}
-                                    <img src="{{ url_for('uploaded_file', filename=user.profile_image) }}" 
-                                         class="rounded-circle border border-3 shadow" 
-                                         width="120" height="120" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
-                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
+                                    <!-- Use optimized responsive image -->
+                                    <div class="profile-image-container profile-image-medium rounded-circle border border-3 shadow" 
+                                         style="border-color: var(--rmit-red) !important;" id="profile-image-preview">
+                                        {{ profile_image(user, 'medium', 'rounded-circle') }}
+                                    </div>
                                 {% else %}
-                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
-                                         style="width: 120px; height: 120px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
-                                        <i class="bi bi-person-fill text-muted" style="font-size: 3rem;"></i>
+                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow placeholder-image" 
+                                         style="width: 200px; height: 200px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
+                                        <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
                                     </div>
                                 {% endif %}
                                 
@@ -45,8 +46,9 @@
                                     <i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>
                                 </button>
                                 
-                                <!-- Hidden file input -->
-                                <input type="file" id="profile-image-input" accept=".png,.jpg,.jpeg,.gif,.webp" 
+                                <!-- Hidden file input with improved compression settings -->
+                                <input type="file" id="profile-image-input" 
+                                       accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" 
                                        style="display: none;" onchange="uploadProfileImage(this)">
                             </div>
                         </div>

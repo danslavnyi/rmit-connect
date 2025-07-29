@@ -359,3 +359,145 @@ main {
 html {
     scroll-behavior: smooth;
 }
+
+/* ==============================================
+   IMAGE OPTIMIZATION & PERFORMANCE
+   ============================================== */
+
+/* Lazy Loading Images */
+img.lazy {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+img.lazy.loaded {
+    opacity: 1;
+}
+
+/* Profile Image Containers */
+.profile-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+}
+
+.profile-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.profile-image-container:hover img {
+    transform: scale(1.05);
+}
+
+/* Responsive Image Sizes */
+.profile-image-thumbnail {
+    width: 60px;
+    height: 60px;
+}
+
+.profile-image-small {
+    width: 120px;
+    height: 120px;
+}
+
+.profile-image-medium {
+    width: 200px;
+    height: 200px;
+}
+
+.profile-image-large {
+    width: 400px;
+    height: 400px;
+}
+
+/* Loading Placeholders */
+.placeholder-image {
+    background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    border-radius: 12px;
+    min-height: 200px;
+}
+
+.placeholder-image i {
+    font-size: 3rem;
+    opacity: 0.5;
+}
+
+/* Image Loading Skeleton */
+.image-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Performance Optimizations */
+picture {
+    display: block;
+}
+
+picture img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+/* WebP Support Indicators */
+.webp .fallback-image {
+    display: none;
+}
+
+.no-webp .webp-image {
+    display: none;
+}
+
+/* Image Upload Preview */
+.image-upload-preview {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+}
+
+/* Compression Quality Indicators */
+.image-quality-high {
+    border: 2px solid #28a745;
+}
+
+.image-quality-medium {
+    border: 2px solid #ffc107;
+}
+
+.image-quality-low {
+    border: 2px solid #dc3545;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .profile-image-large {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .profile-image-medium {
+        width: 150px;
+        height: 150px;
+    }
+}
