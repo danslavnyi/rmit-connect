@@ -18,6 +18,9 @@ from typing import NoReturn
 from app import app, db
 import routes  # noqa: F401 - Import needed for route registration
 
+# Make app available at module level for gunicorn
+application = app
+
 
 def configure_logging() -> None:
     """Configure application logging for different environments."""
@@ -52,7 +55,7 @@ def get_server_config() -> tuple[str, int, bool]:
     host = os.environ.get('HOST', '0.0.0.0')
     port = int(os.environ.get('PORT', 5001))
     debug = os.environ.get('FLASK_ENV') != 'production'
-    
+
     return host, port, debug
 
 
@@ -60,21 +63,21 @@ def main() -> NoReturn:
     """Main application entry point."""
     # Configure logging first
     configure_logging()
-    
+
     # Log startup information
     logging.info("Starting RMIT Connect application...")
     logging.info(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
-    
+
     # Initialize database
     initialize_database()
-    
+
     # Get server configuration
     host, port, debug = get_server_config()
-    
+
     # Log server information
     logging.info(f"Server starting on {host}:{port}")
     logging.info(f"Debug mode: {debug}")
-    
+
     try:
         # Start the Flask application
         app.run(host=host, port=port, debug=debug)

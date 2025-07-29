@@ -1,0 +1,2 @@
+release: python -c "from main import application, db; db.create_all()"
+web: gunicorn --config gunicorn_config.py main:application
