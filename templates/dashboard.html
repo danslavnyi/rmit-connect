@@ -23,17 +23,17 @@
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <!-- Profile Image with Optimization -->
+                        <!-- Profile Image -->
                         <div class="col-md-3 text-center mb-3">
                             <div class="position-relative d-inline-block">
                                 {% if user.profile_image %}
-                                    <!-- Use optimized responsive image -->
-                                    <div class="profile-image-container profile-image-medium rounded-circle border border-3 shadow" 
-                                         style="border-color: var(--rmit-red) !important;" id="profile-image-preview">
-                                        {{ profile_image(user, 'medium', 'rounded-circle') }}
-                                    </div>
+                                    <!-- Use optimized image URL -->
+                                    <img src="{{ get_optimized_image_url(user.profile_image, 'medium') }}" 
+                                         class="rounded-circle border border-3 shadow" 
+                                         width="200" height="200" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
+                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
                                 {% else %}
-                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow placeholder-image" 
+                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
                                          style="width: 200px; height: 200px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
                                         <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
                                     </div>

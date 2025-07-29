@@ -22,6 +22,37 @@ import time
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
+def get_optimized_image_url(filename, size='medium'):
+    """
+    Get URL for optimized image with fallback support.
+
+    Args:
+        filename: Original filename
+        size: 'thumbnail', 'medium', or 'large'
+
+    Returns:
+        URL for the optimized image
+    """
+    if not filename:
+        return None
+
+    try:
+        if size == 'large':
+            return url_for('uploaded_file', filename=filename)
+        else:
+            base_name = filename.rsplit('.', 1)[0]
+            sized_filename = f"{base_name}_{size}.webp"
+            return url_for('uploaded_file', filename=sized_filename)
+    except RuntimeError:
+        # Fallback if not in request context
+        if size == 'large':
+            return f"/uploads/{filename}"
+        else:
+            base_name = filename.rsplit('.', 1)[0]
+            sized_filename = f"{base_name}_{size}.webp"
+            return f"/uploads/{sized_filename}"
+
+
 @app.context_processor
 def inject_image_helpers():
     """Make image optimization functions available in templates"""
@@ -273,28 +304,6 @@ def uploaded_file_sized(base_filename, size):
         app.logger.error(
             f"Error serving sized file {base_filename}/{size}: {str(e)}")
         abort(404)
-
-
-def get_optimized_image_url(filename, size='medium'):
-    """
-    Get URL for optimized image with fallback support.
-
-    Args:
-        filename: Original filename
-        size: 'thumbnail', 'medium', or 'large'
-
-    Returns:
-        URL for the optimized image
-    """
-    if not filename:
-        return None
-
-    if size == 'large':
-        return url_for('uploaded_file', filename=filename)
-    else:
-        base_name = filename.rsplit('.', 1)[0]
-        sized_filename = f"{base_name}_{size}.webp"
-        return url_for('uploaded_file', filename=sized_filename)
 
 
 def send_login_email(email, login_url):
