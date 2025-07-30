@@ -24,18 +24,18 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <!-- Profile Image -->
-                        <div class="col-md-3 text-center mb-3">
+                        <div class="col-md-4 text-center mb-3">
                             <div class="position-relative d-inline-block">
                                 {% if user.profile_image %}
                                     <!-- Use optimized image URL -->
                                     <img src="{{ get_optimized_image_url(user.profile_image, 'medium') }}" 
                                          class="rounded-circle border border-3 shadow" 
-                                         width="200" height="200" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
+                                         width="180" height="180" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
                                          alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
                                 {% else %}
                                     <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
-                                         style="width: 200px; height: 200px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
-                                        <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
+                                         style="width: 180px; height: 180px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
+                                        <i class="bi bi-person-fill text-muted" style="font-size: 3.5rem;"></i>
                                     </div>
                                 {% endif %}
                                 
@@ -54,36 +54,53 @@
                         </div>
                         
                         <!-- Profile Info -->
-                        <div class="col-md-9">
-                            <div class="row">
-                        <div class="col-md-6">
-                            <h6 style="color: var(--rmit-blue);">Name</h6>
-                            <p class="mb-3">{{ user.name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Age</h6>
-                            <p class="mb-3">{{ user.age }} years old</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Education</h6>
-                            <p class="mb-3">{{ user.education }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Country</h6>
-                            <p class="mb-3">{{ user.country }}</p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted">Interests & Hobbies</h6>
-                            <p class="mb-3">{{ user.interests }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Email Address</h6>
-                            <p class="mb-3">{{ user.email }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Member Since</h6>
-                            <p class="mb-3">{{ user.created_at.strftime('%B %d, %Y') }}</p>
-                        </div>
+                        <div class="col-md-8">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 style="color: var(--rmit-blue);"><i class="bi bi-person-badge-fill me-2"></i>Name</h6>
+                                    <p class="mb-0 fs-6">{{ user.name or 'Not specified' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-calendar-fill me-2"></i>Age</h6>
+                                    <p class="mb-0 fs-6">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}Not specified{% endif %}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-mortarboard-fill me-2"></i>Education</h6>
+                                    <p class="mb-0 fs-6">{{ user.education or 'Not specified' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-geo-alt-fill me-2"></i>Country</h6>
+                                    <p class="mb-0 fs-6">{{ user.country or 'Not specified' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-telephone-fill me-2"></i>Contact</h6>
+                                    <p class="mb-0 fs-6">
+                                        {% if user.phone_number and user.phone_number != 'None' %}
+                                            <span style="color: var(--rmit-blue);">📞</span> {{ user.phone_number }}
+                                        {% elif user.instagram and user.instagram != 'None' %}
+                                            <span style="color: var(--rmit-blue);">📷</span> @{{ user.instagram }}
+                                        {% else %}
+                                            Not specified
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-envelope-fill me-2"></i>Email</h6>
+                                    <p class="mb-0 fs-6">{{ user.email }}</p>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
+                                    <p class="mb-0 fs-6">{{ user.interests or 'Not specified' }}</p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
+                                    <p class="mb-0 fs-6">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                                </div>
+                            </div>
                             </div> <!-- Close profile info row -->
                         </div> <!-- Close profile info column -->
                     </div> <!-- Close main row -->
@@ -151,28 +168,36 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}">
+                        <input type="text" class="form-control" id="name" name="name" value="{{ user.name or '' }}">
                     </div>
                     <div class="mb-3">
                         <label for="age" class="form-label">Age</label>
-                        <input type="number" class="form-control" id="age" name="age" value="{{ user.age }}">
+                        <input type="number" class="form-control" id="age" name="age" value="{{ user.age or '' }}">
                     </div>
                     <div class="mb-3">
                         <label for="education" class="form-label">Education</label>
-                        <input type="text" class="form-control" id="education" name="education" value="{{ user.education }}">
+                        <input type="text" class="form-control" id="education" name="education" value="{{ user.education or '' }}">
                     </div>
                     <div class="mb-3">
                         <label for="country" class="form-label">Country</label>
-                        <input type="text" class="form-control" id="country" name="country" value="{{ user.country }}">
+                        <input type="text" class="form-control" id="country" name="country" value="{{ user.country or '' }}">
                     </div>
                     <div class="mb-3">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number }}" placeholder="+61 123 456 789">
-                        <div class="form-text">Enter your phone number for connections to reach you</div>
+                        <label for="contact_type" class="form-label">Contact Information</label>
+                        <div class="input-group">
+                            <select class="form-select" id="contact_type" name="contact_type" style="max-width: 150px;">
+                                <option value="phone" {% if user.phone_number %}selected{% endif %}>Phone</option>
+                                <option value="instagram" {% if user.instagram %}selected{% endif %}>Instagram</option>
+                            </select>
+                            <input type="text" class="form-control" id="contact_value" name="contact_value" 
+                                   value="{% if user.phone_number and user.phone_number != 'None' %}{{ user.phone_number }}{% elif user.instagram and user.instagram != 'None' %}{{ user.instagram }}{% endif %}"
+                                   placeholder="Enter contact info">
+                        </div>
+                        <div class="form-text" id="contact_help">Choose contact type and enter your information for connections to reach you</div>
                     </div>
                     <div class="mb-3">
                         <label for="interests" class="form-label">Interests & Hobbies</label>
-                        <textarea class="form-control" id="interests" name="interests">{{ user.interests }}</textarea>
+                        <textarea class="form-control" id="interests" name="interests">{{ user.interests or '' }}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -366,6 +391,34 @@ function showNotification(message, type) {
         }
     }, 5000);
 }
+
+// Contact field functionality
+function updateContactPlaceholder() {
+    const contactType = document.getElementById('contact_type');
+    const contactValue = document.getElementById('contact_value');
+    const contactHelp = document.getElementById('contact_help');
+    
+    if (contactType && contactValue && contactHelp) {
+        if (contactType.value === 'phone') {
+            contactValue.placeholder = '+61 123 456 789';
+            contactValue.type = 'tel';
+            contactHelp.textContent = 'Enter your phone number for connections to reach you';
+        } else if (contactType.value === 'instagram') {
+            contactValue.placeholder = '@username';
+            contactValue.type = 'text';
+            contactHelp.textContent = 'Enter your Instagram username (without @) for connections to reach you';
+        }
+    }
+}
+
+// Initialize contact field on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const contactType = document.getElementById('contact_type');
+    if (contactType) {
+        updateContactPlaceholder();
+        contactType.addEventListener('change', updateContactPlaceholder);
+    }
+});
 
 // Auto-show profile modal for new users
 {% if force_profile_modal %}

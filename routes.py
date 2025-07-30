@@ -566,6 +566,12 @@ def profile():
         education = request.form.get('education', '').strip()
         interests = request.form.get('interests', '').strip()
         country = request.form.get('country', '').strip()
+
+        # Handle dynamic contact fields
+        contact_type = request.form.get('contact_type', '').strip()
+        contact_value = request.form.get('contact_value', '').strip()
+
+        # Legacy phone number field (for backward compatibility)
         phone_number = request.form.get('phone_number', '').strip()
 
         # Handle image upload for full form
@@ -603,8 +609,11 @@ def profile():
             missing_fields.append('Interests')
         if not country:
             missing_fields.append('Country')
-        if not phone_number:
-            missing_fields.append('Phone Number')
+
+        # Check if contact info is provided (either new dynamic contact or legacy phone)
+        if not contact_value and not phone_number:
+            missing_fields.append(
+                'Contact Information (Phone Number or Instagram)')
 
         if missing_fields:
             flash(
@@ -621,15 +630,37 @@ def profile():
             flash('Please enter a valid age.', 'danger')
             return redirect(url_for('dashboard'))
 
-        # Validate phone number
+        # Validate contact information
+        if contact_value and contact_type:
+            if contact_type == 'phone':
+                # Validate phone number
+                clean_phone = re.sub(r'[\s\-\(\)\+]', '', contact_value)
+                if not clean_phone.isdigit():
+                    flash(
+                        'Phone number must contain only numbers and common formatting characters (+, -, spaces, parentheses).', 'danger')
+                    return redirect(url_for('dashboard'))
+                if not (8 <= len(clean_phone) <= 15):
+                    flash(
+                        'Phone number must be between 8 and 15 digits long.', 'danger')
+                    return redirect(url_for('dashboard'))
+            elif contact_type == 'instagram':
+                # Validate Instagram username (alphanumeric, underscores, periods)
+                if not re.match(r'^[a-zA-Z0-9._]+$', contact_value):
+                    flash(
+                        'Instagram username can only contain letters, numbers, underscores, and periods.', 'danger')
+                    return redirect(url_for('dashboard'))
+                if len(contact_value) > 30:
+                    flash(
+                        'Instagram username cannot be longer than 30 characters.', 'danger')
+                    return redirect(url_for('dashboard'))
+
+        # Legacy phone number validation (for backward compatibility)
         if phone_number:
             clean_phone = re.sub(r'[\s\-\(\)\+]', '', phone_number)
-
             if not clean_phone.isdigit():
                 flash(
                     'Phone number must contain only numbers and common formatting characters (+, -, spaces, parentheses).', 'danger')
                 return redirect(url_for('dashboard'))
-
             if not (8 <= len(clean_phone) <= 15):
                 flash('Phone number must be between 8 and 15 digits long.', 'danger')
                 return redirect(url_for('dashboard'))
@@ -640,7 +671,19 @@ def profile():
         current_user.education = education
         current_user.interests = interests
         current_user.country = country
-        current_user.phone_number = phone_number
+
+        # Handle contact information storage
+        if contact_value and contact_type:
+            if contact_type == 'phone':
+                current_user.phone_number = contact_value
+                current_user.instagram = None  # Clear other contact method
+            elif contact_type == 'instagram':
+                current_user.instagram = contact_value
+                current_user.phone_number = None  # Clear other contact method
+        elif phone_number:
+            # Legacy phone number handling
+            current_user.phone_number = phone_number
+
         current_user.profile_completed = True
 
         # Update profile image if new one was uploaded
