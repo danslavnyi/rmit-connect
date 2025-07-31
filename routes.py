@@ -33,8 +33,31 @@ def get_optimized_image_url(filename, size='medium'):
     Returns:
         URL for the optimized image
     """
+    # Always provide a fallback image if filename is missing or file does not exist
+    uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
+    default_image = 'default.webp'
     if not filename:
-        return None
+        filename = default_image
+    # Check if file exists
+    if size == 'large':
+        file_path = os.path.join(uploads_folder, filename)
+        if not os.path.exists(file_path):
+            filename = default_image
+        try:
+            return url_for('uploaded_file', filename=filename)
+        except RuntimeError:
+            return f"/uploads/{filename}"
+    else:
+        base_name = filename.rsplit('.', 1)[0]
+        sized_filename = f"{base_name}_{size}.webp"
+        file_path = os.path.join(uploads_folder, sized_filename)
+        if not os.path.exists(file_path):
+            sized_filename = default_image
+        try:
+            return url_for('uploaded_file', filename=sized_filename)
+        except RuntimeError:
+            return f"/uploads/{sized_filename}"
 
     try:
         if size == 'large':
@@ -117,6 +140,14 @@ def validate_user_input(email):
     cleaned_email = email.strip().lower()
     # Optionally, add more validation here
     return True, cleaned_email
+# Standalone image processing function for uploads
+
+
+def process_image(image_file, user_id):
+    """
+    Process and optimize uploaded profile image for a user.
+    Returns (filename, message) or (None, error_message)
+    """
     if not image_file or not allowed_file(image_file.filename):
         return None, "Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP images."
 
@@ -240,28 +271,31 @@ def validate_user_input(email):
 def uploaded_file(filename):
     """Serve uploaded files securely with optimized delivery"""
     try:
-        # Check if file exists
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
+        default_image = 'default.webp'
+        file_path = os.path.join(uploads_folder, filename)
         if not os.path.exists(file_path):
-            abort(404)
+            # Fallback to default image if requested file does not exist
+            app.logger.warning(
+                f"Requested image '{filename}' not found, serving default image.")
+            filename = default_image
+            file_path = os.path.join(uploads_folder, filename)
+            if not os.path.exists(file_path):
+                app.logger.error(
+                    f"Default image '{default_image}' not found in uploads folder.")
+                abort(404)
 
-        # Set cache headers for better performance
         response = send_from_directory(
-            app.config['UPLOAD_FOLDER'],
+            uploads_folder,
             filename,
-            conditional=True  # Enable conditional requests (304 Not Modified)
+            conditional=True
         )
-
-        # Add performance headers
-        response.cache_control.max_age = 31536000  # 1 year cache
+        response.cache_control.max_age = 31536000
         response.cache_control.public = True
-
-        # Add WebP content type if needed
         if filename.endswith('.webp'):
             response.headers['Content-Type'] = 'image/webp'
-
         return response
-
     except Exception as e:
         app.logger.error(f"Error serving file {filename}: {str(e)}")
         abort(404)
