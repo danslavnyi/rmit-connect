@@ -106,40 +106,17 @@ def get_liked_by_users(user_id):
 
 
 def validate_user_input(email):
-    """Consolidated input validation"""
-    import os
-    uploads_folder = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), 'static', 'uploads')
-    default_image = 'default.webp'
-
-    if not filename:
-        filename = default_image
-
-    # Check if file exists
-    if size == 'large':
-        file_path = os.path.join(uploads_folder, filename)
-        if not os.path.exists(file_path):
-            filename = default_image
-        try:
-            return url_for('uploaded_file', filename=filename)
-        except RuntimeError:
-            return f"/uploads/{filename}"
-    else:
-        base_name = filename.rsplit('.', 1)[0]
-        sized_filename = f"{base_name}_{size}.webp"
-        file_path = os.path.join(uploads_folder, sized_filename)
-        if not os.path.exists(file_path):
-            sized_filename = default_image
-        try:
-            return url_for('uploaded_file', filename=sized_filename)
-        except RuntimeError:
-            return f"/uploads/{sized_filename}"
-    - Smart resizing with multiple sizes(thumbnail, medium, large)
-    - Aggressive compression while maintaining quality
-    - WebP format conversion for better compression
-    - Progressive JPEG for faster loading
-    - Metadata stripping for privacy and size reduction
     """
+    Consolidated input validation for email address.
+    Returns (is_valid, cleaned_email_or_error_message)
+    """
+    # Basic email validation
+    if not email or '@' not in email or len(email) < 5:
+        return False, "Please enter a valid email address."
+    # Further cleaning (strip spaces, lowercase)
+    cleaned_email = email.strip().lower()
+    # Optionally, add more validation here
+    return True, cleaned_email
     if not image_file or not allowed_file(image_file.filename):
         return None, "Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP images."
 
