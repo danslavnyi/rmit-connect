@@ -152,20 +152,18 @@ def process_image(image_file, user_id):
         return None, "Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP images."
 
     try:
-        # Create unique filename (always save as WebP for best compression)
-        unique_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}.webp"
 
-        # Process image directly from memory (no temp file needed)
+        # Detect image format and convert if needed
         img = Image.open(image_file)
+        img_format = img.format
 
         # Strip EXIF data for privacy and smaller file size
         img_data = list(img.getdata())
         img_clean = Image.new(img.mode, img.size)
         img_clean.putdata(img_data)
 
-        # Convert to RGB for better compression (WebP works best with RGB)
+        # Convert to RGB for best compatibility
         if img_clean.mode in ('RGBA', 'P', 'LA'):
-            # Create white background for transparent images
             background = Image.new('RGB', img_clean.size, (255, 255, 255))
             if img_clean.mode == 'RGBA':
                 background.paste(img_clean, mask=img_clean.split()[-1])
@@ -175,69 +173,65 @@ def process_image(image_file, user_id):
         elif img_clean.mode != 'RGB':
             img_clean = img_clean.convert('RGB')
 
-        # Smart resizing with quality preservation
-        # Multiple sizes for different use cases
-        sizes = {
-            'thumbnail': (150, 150),    # Profile thumbnails
-            'medium': (400, 400),       # Profile cards
-            'large': (800, 800)         # Full profile view
-        }
+        # Unique filename
+        unique_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}.webp"
 
+        sizes = {
+            'thumbnail': (150, 150),
+            'medium': (400, 400),
+            'large': (800, 800)
+        }
         saved_files = []
 
         for size_name, max_size in sizes.items():
-            # Create copy for each size
             img_resized = img_clean.copy()
-
-            # Smart resize: maintain aspect ratio and crop to square if needed
             width, height = img_resized.size
-
-            # Make square by cropping to center
             min_dimension = min(width, height)
             left = (width - min_dimension) // 2
             top = (height - min_dimension) // 2
             right = left + min_dimension
             bottom = top + min_dimension
-
             img_square = img_resized.crop((left, top, right, bottom))
-
-            # Resize to target size with high-quality resampling
             img_final = img_square.resize(max_size, Image.Resampling.LANCZOS)
 
-            # Apply smart sharpening for small images
+            # Sharpen only for small images
             if max_size[0] <= 400:
                 from PIL import ImageFilter
                 img_final = img_final.filter(ImageFilter.UnsharpMask(
                     radius=1.0, percent=120, threshold=1))
 
-            # Generate filename for this size
+            # Use lossless for thumbnails, lossy for others
             if size_name == 'large':
-                size_filename = unique_filename  # Main file
+                size_filename = unique_filename
+                webp_lossless = False
+                webp_quality = 82
+            elif size_name == 'thumbnail':
+                base_name = unique_filename.rsplit('.', 1)[0]
+                size_filename = f"{base_name}_{size_name}.webp"
+                webp_lossless = True
+                webp_quality = 100
             else:
                 base_name = unique_filename.rsplit('.', 1)[0]
                 size_filename = f"{base_name}_{size_name}.webp"
+                webp_lossless = False
+                webp_quality = 75
 
             final_path = os.path.join(
                 app.config['UPLOAD_FOLDER'], size_filename)
-
-            # Save with optimal WebP settings
             img_final.save(
                 final_path,
                 'WebP',
                 optimize=True,
-                quality=82 if size_name == 'large' else 75,  # Higher quality for larger images
-                method=6,  # Best compression method
-                lossless=False,
+                quality=webp_quality,
+                method=6,
+                lossless=webp_lossless,
                 exact=False
             )
-
             saved_files.append(size_filename)
 
-        # Also create a fallback JPEG for older browsers
+        # Fallback JPEG for older browsers
         jpeg_filename = unique_filename.replace('.webp', '.jpg')
         jpeg_path = os.path.join(app.config['UPLOAD_FOLDER'], jpeg_filename)
-
-        # Resize for JPEG (use medium size)
         img_jpeg = img_clean.copy()
         width, height = img_jpeg.size
         min_dimension = min(width, height)
@@ -248,17 +242,16 @@ def process_image(image_file, user_id):
         img_jpeg_final = img_square.resize(
             (400, 400), Image.Resampling.LANCZOS)
 
+        # Use efficient JPEG settings
         img_jpeg_final.save(
             jpeg_path,
             'JPEG',
             optimize=True,
-            quality=78,
-            progressive=True,  # Progressive JPEG for faster perceived loading
-            subsampling=2,     # Better compression
-            qtables='web_high'  # Web-optimized quality tables
+            quality=80,
+            progressive=True,
+            subsampling="4:2:0"
         )
 
-        # Return the main WebP filename (large size)
         return unique_filename, f"Image optimized successfully! Generated {len(saved_files) + 1} variants."
 
     except Exception as e:
