@@ -27,11 +27,29 @@
                         <div class="col-md-4 text-center mb-3">
                             <div class="position-relative d-inline-block">
                                 {% if user.profile_image %}
-                                    <!-- Use optimized image URL -->
-                                    <img src="{{ get_optimized_image_url(user.profile_image, 'medium') }}" 
+                                    <!-- Use optimized image URL with cache-busting for fresh load after login -->
+                                    <img src="{{ get_optimized_image_url(user.profile_image, 'medium') }}?v={{ user.last_login.timestamp() if user.last_login else '' }}" 
                                          class="rounded-circle border border-3 shadow" 
                                          width="180" height="180" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
                                          alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
+                                    <div id="profile-image-loading" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+                                        <span class="spinner-border text-primary" role="status"></span>
+                                    </div>
+                                    <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        var img = document.getElementById('profile-image-preview');
+                                        var loader = document.getElementById('profile-image-loading');
+                                        if (img && loader) {
+                                            loader.style.display = 'block';
+                                            img.onload = function() {
+                                                loader.style.display = 'none';
+                                            };
+                                            img.onerror = function() {
+                                                loader.style.display = 'none';
+                                            };
+                                        }
+                                    });
+                                    </script>
                                 {% else %}
                                     <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
                                          style="width: 180px; height: 180px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
@@ -421,11 +439,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Auto-show profile modal for new users
-{% if force_profile_modal %}
 document.addEventListener('DOMContentLoaded', function() {
+{% if force_profile_modal %}
     showAccountSettings();
-});
 {% endif %}
+});
 </script>
 
 
