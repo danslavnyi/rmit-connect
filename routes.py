@@ -737,7 +737,7 @@ def dashboard():
 @app.route('/history')
 @login_required
 def history():
-    """View user's swipe and like history"""
+    """View user's swipe and like history."""
     if not current_user.profile_completed:
         return redirect(url_for('profile'))
 
