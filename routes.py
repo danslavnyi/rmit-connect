@@ -107,26 +107,34 @@ def get_liked_by_users(user_id):
 
 def validate_user_input(email):
     """Consolidated input validation"""
-    if not email:
-        return False, 'Please enter your email address.'
+    import os
+    uploads_folder = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), 'static', 'uploads')
+    default_image = 'default.webp'
 
-    if not SecurityUtils.validate_input_length(email, 320):
-        return False, 'Email address too long.'
+    if not filename:
+        filename = default_image
 
-    email = SecurityUtils.sanitize_user_input(email)
-
-    if not SecurityUtils.validate_email_security(email):
-        return False, 'Please enter a valid email address.'
-
-    return True, email
-
-
-def process_image(image_file, user_id):
-    """
-    Process and optimize uploaded image with advanced compression.
-
-    Features:
-    - Smart resizing with multiple sizes (thumbnail, medium, large)
+    # Check if file exists
+    if size == 'large':
+        file_path = os.path.join(uploads_folder, filename)
+        if not os.path.exists(file_path):
+            filename = default_image
+        try:
+            return url_for('uploaded_file', filename=filename)
+        except RuntimeError:
+            return f"/uploads/{filename}"
+    else:
+        base_name = filename.rsplit('.', 1)[0]
+        sized_filename = f"{base_name}_{size}.webp"
+        file_path = os.path.join(uploads_folder, sized_filename)
+        if not os.path.exists(file_path):
+            sized_filename = default_image
+        try:
+            return url_for('uploaded_file', filename=sized_filename)
+        except RuntimeError:
+            return f"/uploads/{sized_filename}"
+    - Smart resizing with multiple sizes(thumbnail, medium, large)
     - Aggressive compression while maintaining quality
     - WebP format conversion for better compression
     - Progressive JPEG for faster loading
