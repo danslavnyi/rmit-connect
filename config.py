@@ -83,7 +83,7 @@ class DevelopmentConfig(Config):
     # Development file uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB limit
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 5MB limit
 
 
 class ProductionConfig(Config):
@@ -126,7 +126,7 @@ class ProductionConfig(Config):
     # Production file uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB limit
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 5MB limit
 
     # Security enhancements
     WTF_CSRF_ENABLED = True
