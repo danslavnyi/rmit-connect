@@ -2,14 +2,13 @@ from app import app, db, mail
 from models import User, PermanentLoginLink, Like, Swipe
 from email_templates import get_login_email_html
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_from_directory, make_response
+from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_, exists
 from sqlalchemy.orm import aliased
 from security import require_rate_limit, SecurityUtils
 from flask_mail import Message
-from PIL import Image
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -17,74 +16,7 @@ import os
 import uuid
 import re
 import time
-import tempfile
 import gc
-
-# Upload settings
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
-
-def get_optimized_image_url(filename, size='medium'):
-    """
-    Get URL for optimized image with fallback support.
-
-    Args:
-        filename: Original filename
-        size: 'thumbnail', 'medium', or 'large'
-
-    Returns:
-        URL for the optimized image
-    """
-    # Always provide a fallback image if filename is missing or file does not exist
-    uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
-    default_image = 'default.webp'
-    if not filename:
-        filename = default_image
-    # Check if file exists
-    if size == 'large':
-        file_path = os.path.join(uploads_folder, filename)
-        if not os.path.exists(file_path):
-            filename = default_image
-        try:
-            return url_for('uploaded_file', filename=filename)
-        except RuntimeError:
-            return f"/uploads/{filename}"
-    else:
-        base_name = filename.rsplit('.', 1)[0]
-        sized_filename = f"{base_name}_{size}.webp"
-        file_path = os.path.join(uploads_folder, sized_filename)
-        if not os.path.exists(file_path):
-            sized_filename = default_image
-        try:
-            return url_for('uploaded_file', filename=sized_filename)
-        except RuntimeError:
-            return f"/uploads/{sized_filename}"
-
-    try:
-        if size == 'large':
-            return url_for('uploaded_file', filename=filename)
-        else:
-            base_name = filename.rsplit('.', 1)[0]
-            sized_filename = f"{base_name}_{size}.webp"
-            return url_for('uploaded_file', filename=sized_filename)
-    except RuntimeError:
-        # Fallback if not in request context
-        if size == 'large':
-            return f"/uploads/{filename}"
-        else:
-            base_name = filename.rsplit('.', 1)[0]
-            sized_filename = f"{base_name}_{size}.webp"
-            return f"/uploads/{sized_filename}"
-
-
-@app.context_processor
-def inject_image_helpers():
-    """Make image optimization functions available in templates"""
-    return {
-        'get_optimized_image_url': get_optimized_image_url,
-        'image_sizes': ['thumbnail', 'medium', 'large']
-    }
 
 
 def allowed_file(filename):
@@ -142,201 +74,7 @@ def validate_user_input(email):
     cleaned_email = email.strip().lower()
     # Optionally, add more validation here
     return True, cleaned_email
-# Standalone image processing function for uploads
-
-
-def process_image(image_file, user_id):
-    """
-    Process and optimize uploaded profile image for a user.
-    Returns (filename, message) or (None, error_message)
-    """
-    if not image_file or not allowed_file(image_file.filename):
-        return None, "Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP images."
-
-    try:
-        # Use context manager to ensure file is closed
-        with Image.open(image_file) as img:
-            img_format = img.format
-
-            # Strip EXIF data for privacy and smaller file size
-            img_data = list(img.getdata())
-            img_clean = Image.new(img.mode, img.size)
-            img_clean.putdata(img_data)
-
-            # Convert to RGB for best compatibility
-            if img_clean.mode in ('RGBA', 'P', 'LA'):
-                background = Image.new('RGB', img_clean.size, (255, 255, 255))
-                if img_clean.mode == 'RGBA':
-                    background.paste(img_clean, mask=img_clean.split()[-1])
-                else:
-                    background.paste(img_clean)
-                img_clean = background
-            elif img_clean.mode != 'RGB':
-                img_clean = img_clean.convert('RGB')
-
-            unique_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}.webp"
-            sizes = {
-                'thumbnail': (150, 150),
-                'medium': (400, 400),
-                'large': (800, 800)
-            }
-            saved_files = []
-
-            for size_name, max_size in sizes.items():
-                with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-                    img_resized = img_clean.copy()
-                    width, height = img_resized.size
-                    min_dimension = min(width, height)
-                    left = (width - min_dimension) // 2
-                    top = (height - min_dimension) // 2
-                    right = left + min_dimension
-                    bottom = top + min_dimension
-                    img_square = img_resized.crop((left, top, right, bottom))
-                    img_final = img_square.resize(
-                        max_size, Image.Resampling.LANCZOS)
-
-                    # Sharpen only for small images
-                    if max_size[0] <= 400:
-                        from PIL import ImageFilter
-                        img_final = img_final.filter(ImageFilter.UnsharpMask(
-                            radius=1.0, percent=120, threshold=1))
-
-                    # Use lossless for thumbnails, lossy for others
-                    if size_name == 'large':
-                        size_filename = unique_filename
-                        webp_lossless = False
-                        webp_quality = 80
-                    elif size_name == 'thumbnail':
-                        base_name = unique_filename.rsplit('.', 1)[0]
-                        size_filename = f"{base_name}_{size_name}.webp"
-                        webp_lossless = True
-                        webp_quality = 80
-                    else:
-                        base_name = unique_filename.rsplit('.', 1)[0]
-                        size_filename = f"{base_name}_{size_name}.webp"
-                        webp_lossless = False
-                        webp_quality = 75
-
-                    final_path = os.path.join(
-                        app.config['UPLOAD_FOLDER'], size_filename)
-                    img_final.save(
-                        temp_file.name,
-                        'WebP',
-                        optimize=True,
-                        quality=webp_quality,
-                        method=6,
-                        lossless=webp_lossless,
-                        exact=False
-                    )
-                    saved_files.append(size_filename)
-                    img_final.close()
-                    del img_final
-                    del img_square
-                    del img_resized
-
-            # Fallback JPEG for older browsers
-            jpeg_filename = unique_filename.replace('.webp', '.jpg')
-            jpeg_path = os.path.join(
-                app.config['UPLOAD_FOLDER'], jpeg_filename)
-            img_jpeg = img_clean.copy()
-            width, height = img_jpeg.size
-            min_dimension = min(width, height)
-            left = (width - min_dimension) // 2
-            top = (height - min_dimension) // 2
-            img_square = img_jpeg.crop(
-                (left, top, left + min_dimension, top + min_dimension))
-            img_jpeg_final = img_square.resize(
-                (400, 400), Image.Resampling.LANCZOS)
-
-            img_jpeg_final.save(
-                jpeg_path,
-                'JPEG',
-                optimize=True,
-                quality=80,
-                progressive=True,
-                subsampling="4:2:0"
-            )
-            img_jpeg_final.close()
-            del img_jpeg_final
-            del img_square
-            img_jpeg.close()
-            del img_jpeg
-
-            img_clean.close()
-            del img_clean
-
-            # Force garbage collection
-            gc.collect()
-
-        return unique_filename, f"Image optimized successfully! Generated {len(saved_files) + 1} variants."
-
-    except MemoryError:
-        app.logger.error(
-            f"Memory error during image processing for user {user_id}")
-        return None, "Memory error: Unable to process image. Please try a smaller image."
-
-    except Exception as e:
-        app.logger.error(
-            f"Image processing error for user {user_id}: {str(e)}")
-        return None, f"Error processing image: Please try a different image."
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    """Serve uploaded files securely with optimized delivery"""
-    try:
-        uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
-        default_image = 'default.webp'
-        file_path = os.path.join(uploads_folder, filename)
-        if not os.path.exists(file_path):
-            # Fallback to default image if requested file does not exist
-            app.logger.warning(
-                f"Requested image '{filename}' not found, serving default image.")
-            filename = default_image
-            file_path = os.path.join(uploads_folder, filename)
-            if not os.path.exists(file_path):
-                app.logger.error(
-                    f"Default image '{default_image}' not found in uploads folder.")
-                abort(404)
-
-        response = send_from_directory(
-            uploads_folder,
-            filename,
-            conditional=True
-        )
-        response.cache_control.max_age = 31536000
-        response.cache_control.public = True
-        if filename.endswith('.webp'):
-            response.headers['Content-Type'] = 'image/webp'
-        return response
-    except Exception as e:
-        app.logger.error(f"Error serving file {filename}: {str(e)}")
-        abort(404)
-
-
-@app.route('/uploads/<base_filename>/<size>')
-def uploaded_file_sized(base_filename, size):
-    """Serve different sized versions of uploaded images"""
-    try:
-        # Validate size parameter
-        valid_sizes = ['thumbnail', 'medium', 'large']
-        if size not in valid_sizes:
-            abort(400)
-
-        # Generate sized filename
-        if size == 'large':
-            filename = base_filename
-        else:
-            name_part = base_filename.rsplit('.', 1)[0]
-            filename = f"{name_part}_{size}.webp"
-
-        return uploaded_file(filename)
-
-    except Exception as e:
-        app.logger.error(
-            f"Error serving sized file {base_filename}/{size}: {str(e)}")
-        abort(404)
+# Removed image upload and processing routes and logic
 
 
 def send_login_email(email, login_url):
@@ -562,46 +300,6 @@ def permanent_login(token):
 def profile():
     """User profile creation/editing page"""
     if request.method == 'POST':
-        # Handle image-only upload (AJAX request from dashboard)
-        profile_image_file = request.files.get('profile_image')
-
-        # Check if this is an image-only upload (no other form data)
-        if profile_image_file and profile_image_file.filename and not request.form.get('name'):
-            image_filename, image_message = process_image(
-                profile_image_file, current_user.id)
-            if image_filename:
-                # Delete all old image variants if they exist
-                if current_user.profile_image:
-                    old_base = current_user.profile_image.rsplit('.', 1)[0]
-                    old_files = [
-                        current_user.profile_image,  # large webp
-                        f"{old_base}_thumbnail.webp",
-                        f"{old_base}_medium.webp",
-                        f"{old_base}_large.webp",
-                        f"{old_base}.jpg"
-                    ]
-                    uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
-                    for fname in old_files:
-                        old_path = os.path.join(uploads_folder, fname)
-                        if os.path.exists(old_path):
-                            try:
-                                os.remove(old_path)
-                            except Exception:
-                                pass  # Ignore errors when deleting old image
-
-                # Update profile image
-                current_user.profile_image = image_filename
-                db.session.commit()
-
-                # Return JSON response for AJAX
-                if request.headers.get('Content-Type', '').startswith('multipart/form-data'):
-                    # Simple response that JavaScript can check
-                    return f'✅ {image_message}', 200
-            else:
-                # Return error response
-                return f'❌ {image_message}', 400
-
         # Regular form submission (full profile update)
         # Get form data
         name = request.form.get('name', '').strip()
@@ -616,39 +314,6 @@ def profile():
 
         # Legacy phone number field (for backward compatibility)
         phone_number = request.form.get('phone_number', '').strip()
-
-        # Handle image upload for full form
-        new_image_filename = None
-
-        if profile_image_file and profile_image_file.filename:
-            image_filename, image_message = process_image(
-                profile_image_file, current_user.id)
-            if image_filename:
-                new_image_filename = image_filename
-                flash(f'✅ {image_message}', 'success')
-
-                # Delete all old image variants if they exist
-                if current_user.profile_image:
-                    old_base = current_user.profile_image.rsplit('.', 1)[0]
-                    old_files = [
-                        current_user.profile_image,  # large webp
-                        f"{old_base}_thumbnail.webp",
-                        f"{old_base}_medium.webp",
-                        f"{old_base}_large.webp",
-                        f"{old_base}.jpg"
-                    ]
-                    uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
-                    for fname in old_files:
-                        old_path = os.path.join(uploads_folder, fname)
-                        if os.path.exists(old_path):
-                            try:
-                                os.remove(old_path)
-                            except Exception:
-                                pass  # Ignore errors when deleting old image
-            else:
-                flash(f'❌ {image_message}', 'danger')
-                return redirect(url_for('dashboard'))
 
         # Validate required fields
         missing_fields = []
@@ -738,11 +403,6 @@ def profile():
             current_user.phone_number = phone_number
 
         current_user.profile_completed = True
-
-        # Update profile image if new one was uploaded
-        if new_image_filename:
-            current_user.profile_image = new_image_filename
-
         db.session.commit()
 
         flash(
