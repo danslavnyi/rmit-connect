@@ -2,7 +2,7 @@ from app import app, db, mail
 from models import User, PermanentLoginLink, Like, Swipe
 from email_templates import get_login_email_html
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response
+from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_, exists
@@ -944,3 +944,61 @@ def internal_error(error):
     return render_template('base.html',
                            title='Server Error',
                            content='<div class="text-center"><h1>500</h1><p>Internal server error.</p></div>'), 500
+
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded files securely with optimized delivery"""
+    try:
+        uploads_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
+        default_image = 'default.webp'
+        file_path = os.path.join(uploads_folder, filename)
+        if not os.path.exists(file_path):
+            # Fallback to default image if requested file does not exist
+            app.logger.warning(
+                f"Requested image '{filename}' not found, serving default image.")
+            filename = default_image
+            file_path = os.path.join(uploads_folder, filename)
+            if not os.path.exists(file_path):
+                app.logger.error(
+                    f"Default image '{default_image}' not found in uploads folder.")
+                abort(404)
+
+        response = send_from_directory(
+            uploads_folder,
+            filename,
+            conditional=True
+        )
+        response.cache_control.max_age = 31536000
+        response.cache_control.public = True
+        if filename.endswith('.webp'):
+            response.headers['Content-Type'] = 'image/webp'
+        return response
+    except Exception as e:
+        app.logger.error(f"Error serving file {filename}: {str(e)}")
+        abort(404)
+
+
+@app.route('/uploads/<base_filename>/<size>')
+def uploaded_file_sized(base_filename, size):
+    """Serve different sized versions of uploaded images"""
+    try:
+        # Validate size parameter
+        valid_sizes = ['thumbnail', 'medium', 'large']
+        if size not in valid_sizes:
+            abort(400)
+
+        # Generate sized filename
+        if size == 'large':
+            filename = base_filename
+        else:
+            name_part = base_filename.rsplit('.', 1)[0]
+            filename = f"{name_part}_{size}.webp"
+
+        return uploaded_file(filename)
+
+    except Exception as e:
+        app.logger.error(
+            f"Error serving sized file {base_filename}/{size}: {str(e)}")
+        abort(404)
