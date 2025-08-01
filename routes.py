@@ -17,6 +17,8 @@ import os
 import uuid
 import re
 import time
+import tempfile
+import gc
 
 # Upload settings
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -181,55 +183,56 @@ def process_image(image_file, user_id):
             saved_files = []
 
             for size_name, max_size in sizes.items():
-                img_resized = img_clean.copy()
-                width, height = img_resized.size
-                min_dimension = min(width, height)
-                left = (width - min_dimension) // 2
-                top = (height - min_dimension) // 2
-                right = left + min_dimension
-                bottom = top + min_dimension
-                img_square = img_resized.crop((left, top, right, bottom))
-                img_final = img_square.resize(
-                    max_size, Image.Resampling.LANCZOS)
+                with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+                    img_resized = img_clean.copy()
+                    width, height = img_resized.size
+                    min_dimension = min(width, height)
+                    left = (width - min_dimension) // 2
+                    top = (height - min_dimension) // 2
+                    right = left + min_dimension
+                    bottom = top + min_dimension
+                    img_square = img_resized.crop((left, top, right, bottom))
+                    img_final = img_square.resize(
+                        max_size, Image.Resampling.LANCZOS)
 
-                # Sharpen only for small images
-                if max_size[0] <= 400:
-                    from PIL import ImageFilter
-                    img_final = img_final.filter(ImageFilter.UnsharpMask(
-                        radius=1.0, percent=120, threshold=1))
+                    # Sharpen only for small images
+                    if max_size[0] <= 400:
+                        from PIL import ImageFilter
+                        img_final = img_final.filter(ImageFilter.UnsharpMask(
+                            radius=1.0, percent=120, threshold=1))
 
-                # Use lossless for thumbnails, lossy for others
-                if size_name == 'large':
-                    size_filename = unique_filename
-                    webp_lossless = False
-                    webp_quality = 82
-                elif size_name == 'thumbnail':
-                    base_name = unique_filename.rsplit('.', 1)[0]
-                    size_filename = f"{base_name}_{size_name}.webp"
-                    webp_lossless = True
-                    webp_quality = 100
-                else:
-                    base_name = unique_filename.rsplit('.', 1)[0]
-                    size_filename = f"{base_name}_{size_name}.webp"
-                    webp_lossless = False
-                    webp_quality = 75
+                    # Use lossless for thumbnails, lossy for others
+                    if size_name == 'large':
+                        size_filename = unique_filename
+                        webp_lossless = False
+                        webp_quality = 80
+                    elif size_name == 'thumbnail':
+                        base_name = unique_filename.rsplit('.', 1)[0]
+                        size_filename = f"{base_name}_{size_name}.webp"
+                        webp_lossless = True
+                        webp_quality = 80
+                    else:
+                        base_name = unique_filename.rsplit('.', 1)[0]
+                        size_filename = f"{base_name}_{size_name}.webp"
+                        webp_lossless = False
+                        webp_quality = 75
 
-                final_path = os.path.join(
-                    app.config['UPLOAD_FOLDER'], size_filename)
-                img_final.save(
-                    final_path,
-                    'WebP',
-                    optimize=True,
-                    quality=webp_quality,
-                    method=6,
-                    lossless=webp_lossless,
-                    exact=False
-                )
-                saved_files.append(size_filename)
-                img_final.close()
-                del img_final
-                del img_square
-                del img_resized
+                    final_path = os.path.join(
+                        app.config['UPLOAD_FOLDER'], size_filename)
+                    img_final.save(
+                        temp_file.name,
+                        'WebP',
+                        optimize=True,
+                        quality=webp_quality,
+                        method=6,
+                        lossless=webp_lossless,
+                        exact=False
+                    )
+                    saved_files.append(size_filename)
+                    img_final.close()
+                    del img_final
+                    del img_square
+                    del img_resized
 
             # Fallback JPEG for older browsers
             jpeg_filename = unique_filename.replace('.webp', '.jpg')
@@ -258,10 +261,19 @@ def process_image(image_file, user_id):
             del img_square
             img_jpeg.close()
             del img_jpeg
+
             img_clean.close()
             del img_clean
 
+            # Force garbage collection
+            gc.collect()
+
         return unique_filename, f"Image optimized successfully! Generated {len(saved_files) + 1} variants."
+
+    except MemoryError:
+        app.logger.error(
+            f"Memory error during image processing for user {user_id}")
+        return None, "Memory error: Unable to process image. Please try a smaller image."
 
     except Exception as e:
         app.logger.error(
