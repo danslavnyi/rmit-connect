@@ -304,7 +304,6 @@ def permanent_login(token):
 def profile():
     """User profile creation/editing page"""
     if request.method == 'POST':
-        # Regular form submission (full profile update)
         # Get form data
         name = request.form.get('name', '').strip()
         age = request.form.get('age', '').strip()
@@ -316,122 +315,44 @@ def profile():
         contact_type = request.form.get('contact_type', '').strip()
         contact_value = request.form.get('contact_value', '').strip()
 
-        # Legacy phone number field (for backward compatibility)
-        phone_number = request.form.get('phone_number', '').strip()
-
         # Validate required fields
-        missing_fields = []
-        if not name:
-            missing_fields.append('Name')
-        if not age:
-            missing_fields.append('Age')
-        if not education:
-            missing_fields.append('Education')
-        if not interests:
-            missing_fields.append('Interests')
-        if not country:
-            missing_fields.append('Country')
-
-        # Check if contact info is provided (either new dynamic contact or legacy phone)
-        if not contact_value and not phone_number:
-            missing_fields.append(
-                'Contact Information (Phone Number or Instagram)')
-
-        if missing_fields:
-            flash(
-                f'Please fill in the following required fields: {", ".join(missing_fields)}', 'danger')
+        if not name or not age or not education or not country:
+            flash('Please fill in all required fields.', 'danger')
             return redirect(url_for('dashboard'))
-
-        # Validate age
-        try:
-            age_int = int(age)
-            if age_int < 16 or age_int > 50:
-                flash('Age must be between 16 and 50.', 'danger')
-                return redirect(url_for('dashboard'))
-        except ValueError:
-            flash('Please enter a valid age.', 'danger')
-            return redirect(url_for('dashboard'))
-
-        # Validate contact information
-        if contact_value and contact_type:
-            if contact_type == 'phone':
-                # Validate phone number
-                clean_phone = re.sub(r'[\s\-\(\)\+]', '', contact_value)
-                if not clean_phone.isdigit():
-                    flash(
-                        'Phone number must contain only numbers and common formatting characters (+, -, spaces, parentheses).', 'danger')
-                    return redirect(url_for('dashboard'))
-                if not (8 <= len(clean_phone) <= 15):
-                    flash(
-                        'Phone number must be between 8 and 15 digits long.', 'danger')
-                    return redirect(url_for('dashboard'))
-            elif contact_type == 'instagram':
-                # Validate Instagram username (alphanumeric, underscores, periods)
-                if not re.match(r'^[a-zA-Z0-9._]+$', contact_value):
-                    flash(
-                        'Instagram username can only contain letters, numbers, underscores, and periods.', 'danger')
-                    return redirect(url_for('dashboard'))
-                if len(contact_value) > 30:
-                    flash(
-                        'Instagram username cannot be longer than 30 characters.', 'danger')
-                    return redirect(url_for('dashboard'))
-
-        # Legacy phone number validation (for backward compatibility)
-        if phone_number:
-            clean_phone = re.sub(r'[\s\-\(\)\+]', '', phone_number)
-            if not clean_phone.isdigit():
-                flash(
-                    'Phone number must contain only numbers and common formatting characters (+, -, spaces, parentheses).', 'danger')
-                return redirect(url_for('dashboard'))
-            if not (8 <= len(clean_phone) <= 15):
-                flash('Phone number must be between 8 and 15 digits long.', 'danger')
-                return redirect(url_for('dashboard'))
 
         # Update user profile
         current_user.name = name
-        current_user.age = age_int
+        current_user.age = int(age)
         current_user.education = education
         current_user.interests = interests
         current_user.country = country
 
         # Handle contact information storage
-        if contact_value and contact_type:
-            if contact_type == 'phone':
-                current_user.phone_number = contact_value
-                current_user.instagram = None  # Clear other contact method
-            elif contact_type == 'instagram':
-                current_user.instagram = contact_value
-                current_user.phone_number = None  # Clear other contact method
-        elif phone_number:
-            # Legacy phone number handling
-            current_user.phone_number = phone_number
+        if contact_type == 'phone':
+            current_user.phone_number = contact_value
+            current_user.instagram = None
+        elif contact_type == 'instagram':
+            current_user.instagram = contact_value
+            current_user.phone_number = None
 
         current_user.profile_completed = True
         db.session.commit()
 
-        flash(
-            f'Welcome to CampusConnect, {name}! Your profile has been created successfully.', 'success')
-        flash('You can now start connecting with other students who share your interests!', 'info')
+        flash('Your profile has been updated successfully.', 'success')
         return redirect(url_for('dashboard'))
 
-    # GET request - show profile form if not completed, redirect to dashboard if completed
-    if current_user.profile_completed:
-        return redirect(url_for('dashboard'))
+    # GET request - show profile form if not completed
+    if not current_user.profile_completed:
+        return render_template('dashboard.html', user=current_user, force_profile_modal=True)
 
-    # Show dashboard with profile completion modal for new users
-    return render_template('dashboard.html',
-                           user=current_user,
-                           force_profile_modal=True,
-                           mutual_matches=[],
-                           liked_by=[])
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
     """User dashboard - requires authentication"""
-    if not current_user.profile_completed:
-        return redirect(url_for('profile'))
+    is_new_user = not current_user.profile_completed
 
     # Get mutual matches and liked by users using optimized functions
     mutual_matches = get_mutual_matches(current_user.id)
@@ -440,7 +361,8 @@ def dashboard():
     return render_template('dashboard.html',
                            user=current_user,
                            mutual_matches=mutual_matches,
-                           liked_by=liked_by)
+                           liked_by=liked_by,
+                           is_new_user=is_new_user)
 
 
 @app.route('/history')

@@ -246,6 +246,56 @@
     </div>
 </div>
 
+<!-- Onboarding Modal -->
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('profile') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="onboardingModalLabel">Complete Your Profile</h5>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input name="name" type="text" class="form-control" value="{{ user.name or '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="age" class="form-label">Age</label>
+            <input name="age" type="number" class="form-control" value="{{ user.age or '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="education" class="form-label">Education</label>
+            <input name="education" type="text" class="form-control" value="{{ user.education or '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="country" class="form-label">Country</label>
+            <input name="country" type="text" class="form-control" value="{{ user.country or '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="contact_type" class="form-label">Contact Information</label>
+            <div class="input-group">
+              <select class="form-select" id="contact_type" name="contact_type" style="max-width: 150px;">
+                <option value="phone" {% if user.phone_number %}selected{% endif %}>Phone</option>
+                <option value="instagram" {% if user.instagram %}selected{% endif %}>Instagram</option>
+              </select>
+              <input type="text" class="form-control" id="contact_value" name="contact_value" 
+                     value="{% if user.phone_number and user.phone_number != 'None' %}{{ user.phone_number }}{% elif user.instagram and user.instagram != 'None' %}{{ user.instagram }}{% endif %}"
+                     placeholder="Enter contact info">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="interests" class="form-label">Interests & Hobbies</label>
+            <textarea name="interests" class="form-control" placeholder="Optional (e.g. music, sports, coding)">{{ user.interests or '' }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 function showAccountSettings() {
     const modal = new bootstrap.Modal(document.getElementById('accountModal'));
@@ -311,10 +361,16 @@ document.addEventListener('DOMContentLoaded', function() {
         contactType.addEventListener('change', updateContactPlaceholder);
     }
 });
-
-// Auto-show profile modal for new users
-
 </script>
+
+{% if is_new_user %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('onboardingModal'));
+    modal.show();
+});
+</script>
+{% endif %}
 
 
 
