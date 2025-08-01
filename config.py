@@ -85,6 +85,9 @@ class DevelopmentConfig(Config):
         os.path.abspath(__file__)), 'static', 'uploads')
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 5MB limit
 
+    # Allowed file extensions for uploads
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 
 class ProductionConfig(Config):
     """Production configuration - maximum security"""
@@ -134,6 +137,9 @@ class ProductionConfig(Config):
 
     # Logging for production
     LOG_LEVEL = 'INFO'
+
+    # Allowed file extensions for uploads
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 # Configuration selection

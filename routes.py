@@ -17,6 +17,10 @@ import uuid
 import re
 import time
 import gc
+from config import get_config
+
+# Fetch ALLOWED_EXTENSIONS from the current configuration
+ALLOWED_EXTENSIONS = get_config().ALLOWED_EXTENSIONS
 
 
 def allowed_file(filename):

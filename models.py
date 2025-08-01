@@ -26,9 +26,7 @@ class User(UserMixin, db.Model):
     interests = db.Column(db.Text)
     country = db.Column(db.String(100))
     profile_completed = db.Column(db.Boolean, default=False)
-    # Store filename of uploaded image
-    profile_image = db.Column(db.String(200))
-
+   
     # Contact information (optional, for sharing with mutual matches)
     phone_number = db.Column(db.String(20))
     instagram = db.Column(db.String(50))

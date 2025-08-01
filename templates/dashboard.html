@@ -22,82 +22,29 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <!-- Profile Image -->
-                        <div class="col-md-4 text-center mb-3">
-                            <div class="position-relative d-inline-block">
-                                {% if user.profile_image %}
-                                    <!-- Use optimized image URL with cache-busting for fresh load after login -->
-                                    <img src="{{ get_optimized_image_url(user.profile_image, 'medium') }}?v={{ user.last_login.timestamp() if user.last_login else '' }}" 
-                                         class="rounded-circle border border-3 shadow" 
-                                         width="180" height="180" style="object-fit: cover; border-color: var(--rmit-red) !important;" 
-                                         alt="{{ user.name }}'s profile photo" id="profile-image-preview" loading="lazy">
-                                    <div id="profile-image-loading" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-                                        <span class="spinner-border text-primary" role="status"></span>
-                                    </div>
-                                    <script>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        var img = document.getElementById('profile-image-preview');
-                                        var loader = document.getElementById('profile-image-loading');
-                                        if (img && loader) {
-                                            loader.style.display = 'block';
-                                            img.onload = function() {
-                                                loader.style.display = 'none';
-                                            };
-                                            img.onerror = function() {
-                                                loader.style.display = 'none';
-                                                // Fallback behavior: Show placeholder image
-                                                img.src = '/static/images/default-profile.png';
-                                            };
-                                            // Add cache-busting query parameter
-                                            const timestamp = new Date().getTime();
-                                            img.src = img.src.split('?')[0] + '?v=' + timestamp;
-                                        }
-                                    });
-                                    </script>
-                                {% else %}
-                                    <div class="bg-light rounded-circle border border-3 d-inline-flex align-items-center justify-content-center shadow" 
-                                         style="width: 180px; height: 180px; border-color: var(--rmit-red) !important;" id="profile-image-preview">
-                                        <i class="bi bi-person-fill text-muted" style="font-size: 3.5rem;"></i>
-                                    </div>
-                                {% endif %}
-                                
-                                <!-- Edit Button -->
-                                <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute" 
-                                        style="bottom: 5px; right: 5px; width: 35px; height: 35px; border-color: var(--rmit-red); background-color: var(--rmit-red); display: flex; align-items: center; justify-content: center;"
-                                        onclick="triggerImageUpload()" title="Change profile photo">
-                                    <i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>
-                                </button>
-                                
-                                <!-- Hidden file input with improved compression settings -->
-                                <input type="file" id="profile-image-input" 
-                                       accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" 
-                                       style="display: none;" onchange="uploadProfileImage(this)">
-                            </div>
-                        </div>
-                        
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 350px;">
                         <!-- Profile Info -->
-                        <div class="col-md-8">
-                            <div class="row g-4">
-                                <div class="col-md-6">
+                        <div class="w-100">
+                            <div class="row g-4 text-center justify-content-center align-items-center">
+                                <div class="col-md-6 mb-2">
                                     <h6 style="color: var(--rmit-blue);"><i class="bi bi-person-badge-fill me-2"></i>Name</h6>
-                                    <p class="mb-0 fs-6">{{ user.name or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.name or 'Not specified' }}</p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-calendar-fill me-2"></i>Age</h6>
-                                    <p class="mb-0 fs-6">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}Not specified{% endif %}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}Not specified{% endif %}</p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-mortarboard-fill me-2"></i>Education</h6>
-                                    <p class="mb-0 fs-6">{{ user.education or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.education or 'Not specified' }}</p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-geo-alt-fill me-2"></i>Country</h6>
-                                    <p class="mb-0 fs-6">{{ user.country or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.country or 'Not specified' }}</p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-telephone-fill me-2"></i>Contact</h6>
-                                    <p class="mb-0 fs-6">
+                                    <p class="mb-0 fs-6 profile-info-data">
                                         {% if user.phone_number and user.phone_number != 'None' %}
                                             <span style="color: var(--rmit-blue);">📞</span> {{ user.phone_number }}
                                         {% elif user.instagram and user.instagram != 'None' %}
@@ -107,21 +54,29 @@
                                         {% endif %}
                                     </p>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-envelope-fill me-2"></i>Email</h6>
-                                    <p class="mb-0 fs-6">{{ user.email }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.email }}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or 'Not specified' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.created_at.strftime('%B %d, %Y') }}</p>
                                 </div>
                             </div>
-                            <div class="row mt-4">
+                            <div class="row mt-4 text-center">
                                 <div class="col-12">
                                     <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
-                                    <p class="mb-0 fs-6">{{ user.interests or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or 'Not specified' }}</p>
                                 </div>
                             </div>
-                            <div class="row mt-3">
+                            <div class="row mt-3 text-center">
                                 <div class="col-12">
                                     <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
-                                    <p class="mb-0 fs-6">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.created_at.strftime('%B %d, %Y') }}</p>
                                 </div>
                             </div>
                             </div> <!-- Close profile info row -->
@@ -305,92 +260,6 @@ function showSecurityInfo() {
 function showInteractions() {
     const modal = new bootstrap.Modal(document.getElementById('interactionsModal'));
     modal.show();
-}
-
-// Profile image upload functions
-function triggerImageUpload() {
-    document.getElementById('profile-image-input').click();
-}
-
-function uploadProfileImage(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-
-        // Validate file size (4MB limit)
-        if (file.size > 4 * 1024 * 1024) {
-            alert('❌ File size must be less than 4MB');
-            input.value = '';
-            return;
-        }
-
-        // Compress image before upload
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
-
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                // Set canvas dimensions for compression
-                const maxWidth = 800;
-                const maxHeight = 800;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width *= maxHeight / height;
-                        height = maxHeight;
-                    }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Convert to compressed image format
-                canvas.toBlob(function(blob) {
-                    const formData = new FormData();
-                    formData.append('profile_image', blob, file.name);
-
-                    fetch('{{ url_for("profile") }}', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        const editBtn = document.querySelector('.btn-primary.rounded-circle');
-                        editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
-                        editBtn.disabled = false;
-
-                        if (html.includes('Image uploaded successfully') || html.includes('✅')) {
-                            showNotification('✅ Profile photo updated successfully!', 'success');
-                        } else {
-                            showNotification('❌ Failed to upload image. Please try again.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Upload error:', error);
-                        showNotification('❌ Network error. Please try again.', 'error');
-                    });
-                }, 'image/jpeg', 0.8); // Compress to 80% quality
-            };
-
-            img.onerror = function() {
-                alert('❌ Invalid image file');
-                input.value = '';
-            };
-        };
-
-        reader.readAsDataURL(file);
-    }
 }
 
 // Notification system

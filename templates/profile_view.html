@@ -17,29 +17,30 @@
                     <p class="mb-0" style="color: var(--rmit-aqua);">{{ user.age }} years old</p>
                 </div>
                 
-                <div class="card-body p-4">
+
+                <div class="card-body p-4 text-center">
                     <!-- Education -->
                     <div class="mb-4">
-                        <h6 class="mb-2" style="color: var(--rmit-blue);">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
                             <i class="bi bi-mortarboard-fill me-2" style="color: var(--rmit-red);"></i>Education
                         </h6>
-                        <p class="mb-0">{{ user.education }}</p>
+                        <p class="mb-0 profile-data">{{ user.education }}</p>
                     </div>
 
                     <!-- Country -->
                     <div class="mb-4">
-                        <h6 class="mb-2" style="color: var(--rmit-blue);">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
                             <i class="bi bi-geo-alt-fill me-2" style="color: var(--rmit-aqua);"></i>Location
                         </h6>
-                        <p class="mb-0">{{ user.country }}</p>
+                        <p class="mb-0 profile-data">{{ user.country }}</p>
                     </div>
 
                     <!-- Interests -->
                     <div class="mb-4">
-                        <h6 class="mb-2" style="color: var(--rmit-blue);">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
                             <i class="bi bi-heart-fill me-2" style="color: var(--rmit-lavender);"></i>Interests & Hobbies
                         </h6>
-                        <p class="mb-0" style="line-height: 1.6;">{{ user.interests }}</p>
+                        <p class="mb-0 profile-data" style="line-height: 1.6;">{{ user.interests }}</p>
                     </div>
 
                     <!-- RMIT Connection Badge -->
@@ -82,6 +83,14 @@
     text-transform: uppercase;
     font-size: 12px;
     letter-spacing: 0.5px;
+}
+
+.profile-data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
 }
 
 .badge {

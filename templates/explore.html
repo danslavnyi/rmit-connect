@@ -45,20 +45,9 @@
     <div id="profile-card" class="mx-auto" style="max-width: 400px;">
         <div class="card shadow-lg">
             <div class="card-body text-center p-4">
-                <!-- Profile Image -->
                 <div class="mb-3">
-                    {% if user.profile_image %}
-                        <img src="{{ url_for('uploaded_file', filename=user.profile_image) }}" 
-                             class="rounded-circle border border-3 border-primary shadow" 
-                             width="150" height="150" style="object-fit: cover;" 
-                             alt="{{ user.name }}'s profile photo">
-                    {% else %}
-                        <div class="bg-light rounded-circle border border-3 border-primary d-inline-flex align-items-center justify-content-center shadow" 
-                             style="width: 150px; height: 150px;">
-                            <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
+        
                         </div>
-                    {% endif %}
-                </div>
                 <h3 class="card-title">{{ user.name }}</h3>
                 <h6 class="text-muted mb-3">{{ user.age }} years old</h6>
                 
