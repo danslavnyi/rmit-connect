@@ -46,7 +46,12 @@
                                             };
                                             img.onerror = function() {
                                                 loader.style.display = 'none';
+                                                // Fallback behavior: Show placeholder image
+                                                img.src = '/static/images/default-profile.png';
                                             };
+                                            // Add cache-busting query parameter
+                                            const timestamp = new Date().getTime();
+                                            img.src = img.src.split('?')[0] + '?v=' + timestamp;
                                         }
                                     });
                                     </script>
@@ -310,81 +315,60 @@ function triggerImageUpload() {
 function uploadProfileImage(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        // Validate file size (5MB limit)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('❌ File size must be less than 5MB');
+
+        // Validate file size (4MB limit)
+        if (file.size > 4 * 1024 * 1024) {
+            alert('❌ File size must be less than 4MB');
             input.value = '';
             return;
         }
-        
-        // Validate file type
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            alert('❌ Please select a valid image file (PNG, JPG, GIF, WebP)');
+
+        // Validate image dimensions
+        const img = new Image();
+        img.onload = function() {
+            if (img.width > 2000 || img.height > 2000) {
+                alert('❌ Image dimensions must be less than 2000x2000 pixels');
+                input.value = '';
+                return;
+            }
+
+            // Proceed with upload
+            const formData = new FormData();
+            formData.append('profile_image', file);
+
+            fetch('{{ url_for("profile") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Handle response
+                const editBtn = document.querySelector('.btn-primary.rounded-circle');
+                editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
+                editBtn.disabled = false;
+
+                if (html.includes('Image uploaded successfully') || html.includes('✅')) {
+                    showNotification('✅ Profile photo updated successfully!', 'success');
+                } else {
+                    showNotification('❌ Failed to upload image. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showNotification('❌ Network error. Please try again.', 'error');
+            });
+        };
+
+        img.onerror = function() {
+            alert('❌ Invalid image file');
             input.value = '';
-            return;
-        }
-        
-        // Show loading indicator
-        const editBtn = document.querySelector('.btn-primary.rounded-circle');
-        editBtn.innerHTML = '⏳';
-        editBtn.disabled = true;
-        
-        // Preview image immediately
+        };
+
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('profile-image-preview');
-            if (preview.tagName === 'IMG') {
-                preview.src = e.target.result;
-            } else {
-                // Replace placeholder with image
-                const imgElement = document.createElement('img');
-                imgElement.src = e.target.result;
-                imgElement.className = 'rounded-circle border border-3 shadow';
-                imgElement.style.width = '120px';
-                imgElement.style.height = '120px';
-                imgElement.style.objectFit = 'cover';
-                imgElement.style.borderColor = 'var(--rmit-red)';
-                imgElement.alt = "{{ user.name }}'s profile photo";
-                imgElement.id = 'profile-image-preview';
-                preview.parentNode.replaceChild(imgElement, preview);
-            }
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
-        
-        // Upload image via AJAX
-        const formData = new FormData();
-        formData.append('profile_image', file);
-        
-        fetch('{{ url_for("profile") }}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Reset button
-            editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
-            editBtn.disabled = false;
-            
-            // Check if upload was successful by looking for success message in response
-            if (html.includes('Image uploaded successfully') || html.includes('✅')) {
-                // Show success message
-                showNotification('✅ Profile photo updated successfully!', 'success');
-            } else if (html.includes('danger') || html.includes('❌')) {
-                // Show error message
-                showNotification('❌ Failed to upload image. Please try again.', 'error');
-            } else {
-                // Generic success (page redirected)
-                showNotification('✅ Profile photo updated!', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Upload error:', error);
-            editBtn.innerHTML = '<i class="bi bi-pencil-fill text-white" style="font-size: 14px;"></i>';
-            editBtn.disabled = false;
-            showNotification('❌ Network error. Please try again.', 'error');
-        });
     }
 }
 
