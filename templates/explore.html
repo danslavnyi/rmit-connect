@@ -82,6 +82,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Email Notification Modal -->
+    <div class="modal fade" id="emailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <h4 id="emailModalTitle"></h4>
+                    <p id="emailModalMsg"></p>
+                    <button type="button" class="btn btn-primary" id="emailModalContinue">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     {% else %}
     <div class="text-center">
@@ -154,14 +167,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             document.getElementById('matchedUserName').textContent = data.user_name;
                             const matchModal = new bootstrap.Modal(document.getElementById('matchModal'));
                             matchModal.show();
-                            
-                            // Reload page after modal is closed
                             document.getElementById('matchModal').addEventListener('hidden.bs.modal', () => {
                                 location.reload();
                             });
+                        } else if (data && typeof data.email_sent !== 'undefined') {
+                            // Show email notification modal
+                            const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+                            document.getElementById('emailModalTitle').textContent = data.email_sent ? 'Email Sent!' : 'Email Failed';
+                            document.getElementById('emailModalMsg').textContent = data.email_message;
+                            emailModal.show();
+                            document.getElementById('emailModalContinue').onclick = function() {
+                                emailModal.hide();
+                                location.reload();
+                            };
                         } else {
                             // Just reload to get next profile
-                            console.log('Reloading page...');
                             location.reload();
                         }
                     }, 300); // Wait for animation to complete

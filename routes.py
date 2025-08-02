@@ -137,14 +137,14 @@ def send_login_email(email, login_url):
 def send_like_notification_email(user, liker):
     """Send email notification when a user receives a like"""
     try:
-        app.logger.info(f"Sending like notification email to: {liker.email}")
+        app.logger.info(f"Sending like notification email to: {user.email}")
         # Prepare the email content
         subject = "You've received a new like!"
         sender = app.config['MAIL_DEFAULT_SENDER']
-        recipients = [liker.email]
+        recipients = [user.email]
 
         # Use the email template from liked_email_user.py
-        body = get_like_notification_email_html(user, liker)
+        body = get_like_notification_email_html(liker, user)
 
         # Try Flask-Mail first (if configured)
         if app.config.get('MAIL_USERNAME'):
@@ -725,21 +725,12 @@ def like_user(user_id):
         if not existing_like:
             new_like = Like(liker_id=current_user.id, liked_id=user_id)
             db.session.add(new_like)
-            success, message = send_like_notification_email(
-                target_user, current_user)
+            send_like_notification_email(target_user, current_user)
             db.session.commit()
-
-            if success:
-                flash('Email notification sent successfully!', 'success')
-            else:
-                flash(
-                    f'Failed to send email notification: {message}', 'danger')
-
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error in like_user: {str(e)}")
         abort(500)
-
     return '', 204
 
 
@@ -835,17 +826,9 @@ def swipe(user_id, action):
             if not existing_like:
                 db.session.add(
                     Like(liker_id=current_user.id, liked_id=user_id))
-
-            # Check for mutual match
-            mutual_like = Like.query.filter_by(
-                liker_id=user_id, liked_id=current_user.id).first()
-
-            if mutual_like:
-                # It's a match! You could add notification logic here
-                other_user = User.query.get(user_id)
-                db.session.commit()
-                return jsonify({'match': True, 'user_name': other_user.name}), 200
-
+                send_like_notification_email(target_user, current_user)
+            db.session.commit()
+            return '', 204
         db.session.commit()
         return '', 204
 
