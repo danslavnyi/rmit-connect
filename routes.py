@@ -133,6 +133,69 @@ def send_login_email(email, login_url):
         return False, f"Failed to send email: {str(e)}"
 
 
+def send_like_notification_email(user, liker):
+    """Send email notification when a user receives a like"""
+    try:
+        # Prepare the email content
+        subject = "You've received a new like!"
+        sender = app.config['MAIL_DEFAULT_SENDER']
+        recipients = [user.email]
+
+        # Create the email body
+        body = f"Hello {user.name or user.email},<br><br>"
+        body += f"You have received a new like from {liker.name or liker.email}!<br><br>"
+        body += "Log in to your account to see the like and connect with other students.<br><br>"
+        body += "Best regards,<br>The CampusConnect Team"
+
+        # Try Flask-Mail first (if configured)
+        if app.config.get('MAIL_USERNAME'):
+            msg = Message(
+                subject,
+                sender=sender,
+                recipients=recipients
+            )
+            msg.html = body
+            mail.send(msg)
+            return True, "Like notification email sent successfully via Flask-Mail"
+
+    except Exception as e:
+        app.logger.error(f"Flask-Mail error: {str(e)}")
+
+    # Fallback to direct SMTP
+    try:
+        # Get credentials from environment variables
+        smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+        smtp_username = os.environ.get('SMTP_USERNAME')
+        smtp_password = os.environ.get('SMTP_PASSWORD')
+
+        if not smtp_username or not smtp_password:
+            return False, "Email credentials not configured"
+
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = smtp_username
+        msg['To'] = user.email
+
+        # Attach HTML content
+        html_part = MIMEText(body, 'html')
+        msg.attach(html_part)
+
+        # Send email
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+
+        return True, "Like notification email sent successfully via SMTP"
+
+    except Exception as e:
+        app.logger.error(f"SMTP error: {str(e)}")
+        return False, f"Failed to send like notification email: {str(e)}"
+
+
 @app.route('/')
 def index():
     """Home page - shows different content based on authentication status"""

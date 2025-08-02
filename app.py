@@ -104,6 +104,7 @@ def load_user(user_id):
 with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
+    import routes  # noqa: F401
     db.create_all()
 
     # Ensure upload folder exists with proper permissions
