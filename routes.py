@@ -1,6 +1,7 @@
 from app import app, db, mail
 from models import User, PermanentLoginLink, Like, Swipe
 from email_templates import get_login_email_html
+from liked_email_user import get_like_notification_email_html
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
@@ -141,11 +142,8 @@ def send_like_notification_email(user, liker):
         sender = app.config['MAIL_DEFAULT_SENDER']
         recipients = [user.email]
 
-        # Create the email body
-        body = f"Hello {user.name or user.email},<br><br>"
-        body += f"You have received a new like from {liker.name or liker.email}!<br><br>"
-        body += "Log in to your account to see the like and connect with other students.<br><br>"
-        body += "Best regards,<br>The CampusConnect Team"
+        # Use the email template from liked_email_user.py
+        body = get_like_notification_email_html(user, liker)
 
         # Try Flask-Mail first (if configured)
         if app.config.get('MAIL_USERNAME'):
@@ -726,6 +724,7 @@ def like_user(user_id):
         if not existing_like:
             new_like = Like(liker_id=current_user.id, liked_id=user_id)
             db.session.add(new_like)
+            send_like_notification_email(target_user, current_user)
             db.session.commit()
     except Exception as e:
         db.session.rollback()
