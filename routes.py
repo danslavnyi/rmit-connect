@@ -137,10 +137,11 @@ def send_login_email(email, login_url):
 def send_like_notification_email(user, liker):
     """Send email notification when a user receives a like"""
     try:
+        app.logger.info(f"Sending like notification email to: {liker.email}")
         # Prepare the email content
         subject = "You've received a new like!"
         sender = app.config['MAIL_DEFAULT_SENDER']
-        recipients = [user.email]
+        recipients = [liker.email]
 
         # Use the email template from liked_email_user.py
         body = get_like_notification_email_html(user, liker)
@@ -724,8 +725,16 @@ def like_user(user_id):
         if not existing_like:
             new_like = Like(liker_id=current_user.id, liked_id=user_id)
             db.session.add(new_like)
-            send_like_notification_email(target_user, current_user)
+            success, message = send_like_notification_email(
+                target_user, current_user)
             db.session.commit()
+
+            if success:
+                flash('Email notification sent successfully!', 'success')
+            else:
+                flash(
+                    f'Failed to send email notification: {message}', 'danger')
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error in like_user: {str(e)}")
