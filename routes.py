@@ -14,19 +14,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
-import uuid
 import re
 import time
-import gc
-from config import get_config
 
-# Fetch ALLOWED_EXTENSIONS from the current configuration
-ALLOWED_EXTENSIONS = get_config().ALLOWED_EXTENSIONS
-
-
-def allowed_file(filename):
-    """Check if file has allowed extension"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# Cache control constants
+CACHE_MAX_AGE_ONE_YEAR = 31536000  # 1 year in seconds
 
 
 def get_mutual_matches(user_id):
@@ -79,7 +71,6 @@ def validate_user_input(email):
     cleaned_email = email.strip().lower()
     # Optionally, add more validation here
     return True, cleaned_email
-# Removed image upload and processing routes and logic
 
 
 def send_login_email(email, login_url):
@@ -761,8 +752,8 @@ def unlike_user(user_id):
 @login_required
 def explore_user(user_id):
     user = User.query.get_or_404(user_id)
-    # Get all users who liked current user
-    liked_by = Like.get_liked_by_user(current_user)
+    # Get all users who liked current user using the helper function
+    liked_by = get_liked_by_users(current_user.id)
     # Find the index of the current user in liked_by
     ids = [u.id for u in liked_by]
     try:
@@ -827,15 +818,14 @@ def swipe(user_id, action):
                 db.session.add(
                     Like(liker_id=current_user.id, liked_id=user_id))
                 send_like_notification_email(target_user, current_user)
-            db.session.commit()
-            return '', 204
+
         db.session.commit()
-        return '', 204
 
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error in swipe: {str(e)}")
         abort(500)
+
     return '', 204
 
 
@@ -868,47 +858,6 @@ def robots_txt():
         app.static_folder, 'robots.txt'))
     response.headers['Content-Type'] = 'text/plain'
     return response
-
-
-@app.route('/admin/db-status')
-def admin_db_status():
-    """Check database connection and show info - REMOVE AFTER TESTING"""
-    try:
-        # Test database connection
-        result = db.session.execute('SELECT version()').fetchone()
-        db_version = result[0] if result else 'Unknown'
-
-        # Get database URL (hide password)
-        db_url = os.environ.get('DATABASE_URL', 'Not set')
-        safe_db_url = db_url.replace(db_url.split(':')[2].split(
-            '@')[0], '****') if '@' in db_url else db_url
-
-        # Test table creation
-        db.create_all()
-
-        # Count existing tables
-        tables_query = """
-        SELECT table_name FROM information_schema.tables 
-        WHERE table_schema = 'public'
-        """
-        tables_result = db.session.execute(tables_query).fetchall()
-        table_names = [row[0] for row in tables_result]
-
-        return jsonify({
-            'status': 'Connected to PostgreSQL',
-            'database_url': safe_db_url,
-            'version': db_version,
-            'tables_created': table_names,
-            'environment': os.environ.get('FLASK_ENV', 'production'),
-            'total_tables': len(table_names)
-        })
-
-    except Exception as e:
-        return jsonify({
-            'status': 'Database connection failed',
-            'error': str(e),
-            'database_url': 'Check environment variable'
-        }), 500
 
 
 @app.errorhandler(404)
@@ -950,7 +899,7 @@ def uploaded_file(filename):
             filename,
             conditional=True
         )
-        response.cache_control.max_age = 31536000
+        response.cache_control.max_age = CACHE_MAX_AGE_ONE_YEAR
         response.cache_control.public = True
         if filename.endswith('.webp'):
             response.headers['Content-Type'] = 'image/webp'
