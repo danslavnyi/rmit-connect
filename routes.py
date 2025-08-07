@@ -407,6 +407,11 @@ def dashboard():
     """User dashboard - requires authentication"""
     is_new_user = not current_user.profile_completed
 
+    # If user just completed profile, don't show onboarding modal again
+    force_profile_modal = False
+    if is_new_user:
+        force_profile_modal = True
+
     # Get mutual matches and liked by users using optimized functions
     mutual_matches = get_mutual_matches(current_user.id)
     liked_by = get_liked_by_users(current_user.id)
@@ -415,7 +420,8 @@ def dashboard():
                            user=current_user,
                            mutual_matches=mutual_matches,
                            liked_by=liked_by,
-                           is_new_user=is_new_user)
+                           is_new_user=is_new_user,
+                           force_profile_modal=force_profile_modal)
 
 
 @app.route('/history')

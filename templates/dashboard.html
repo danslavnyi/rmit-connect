@@ -366,8 +366,21 @@ document.addEventListener('DOMContentLoaded', function() {
 {% if is_new_user %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Onboarding modal triggered - is_new_user: true');
+    console.log('User profile_completed: {{ user.profile_completed|lower }}');
+    console.log('User name: {{ user.name or "None" }}');
+    console.log('User age: {{ user.age or "null" }}');
     const modal = new bootstrap.Modal(document.getElementById('onboardingModal'));
     modal.show();
+});
+</script>
+{% else %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Onboarding modal NOT triggered - is_new_user: false');
+    console.log('User profile_completed: {{ user.profile_completed|lower }}');
+    console.log('User name: {{ user.name or "None" }}');
+    console.log('User age: {{ user.age or "null" }}');
 });
 </script>
 {% endif %}
