@@ -28,19 +28,19 @@
                             <div class="row g-4 text-center justify-content-center align-items-center">
                                 <div class="col-md-6 mb-2">
                                     <h6 style="color: var(--rmit-blue);"><i class="bi bi-person-badge-fill me-2"></i>Name</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{{ user.name or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.name or '' }}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-calendar-fill me-2"></i>Age</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}Not specified{% endif %}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}{% endif %}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-mortarboard-fill me-2"></i>Education</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{{ user.education or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.education or '' }}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-geo-alt-fill me-2"></i>Country</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{{ user.country or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.country or '' }}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-telephone-fill me-2"></i>Contact</h6>
@@ -50,7 +50,7 @@
                                         {% elif user.instagram and user.instagram != 'None' %}
                                             <span style="color: var(--rmit-blue);">📷</span> @{{ user.instagram }}
                                         {% else %}
-                                            Not specified
+                                            
                                         {% endif %}
                                     </p>
                                 </div>
@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or '' }}</p>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
@@ -70,7 +70,7 @@
                             <div class="row mt-4 text-center">
                                 <div class="col-12">
                                     <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
-                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or 'Not specified' }}</p>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or '' }}</p>
                                 </div>
                             </div>
                             <div class="row mt-3 text-center">
