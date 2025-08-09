@@ -26,7 +26,9 @@ class User(UserMixin, db.Model):
     interests = db.Column(db.Text)
     country = db.Column(db.String(100))
     profile_completed = db.Column(db.Boolean, default=False)
-   
+    # Store filename of profile image
+    profile_image = db.Column(db.String(255))
+
     # Contact information (optional, for sharing with mutual matches)
     phone_number = db.Column(db.String(20))
     instagram = db.Column(db.String(50))
@@ -57,6 +59,26 @@ class User(UserMixin, db.Model):
         self.failed_login_attempts = 0
         self.account_locked_until = None
         self.last_login = datetime.utcnow()
+
+    def get_profile_image_url(self):
+        """Get the URL for the user's profile image"""
+        if self.profile_image:
+            return f"/uploads/{self.profile_image}"
+        return "/static/images/default-profile.png"
+
+    def is_profile_complete(self):
+        """Check if user has completed their profile with all required information"""
+        return (
+            self.profile_completed and
+            self.name and
+            self.age and
+            self.education and
+            self.country
+        )
+
+    def is_new_user(self):
+        """Check if user is new (has incomplete profile)"""
+        return not self.is_profile_complete()
 
     def __repr__(self):
         return f'<User {self.email}>'

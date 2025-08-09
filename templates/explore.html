@@ -46,8 +46,11 @@
         <div class="card shadow-lg">
             <div class="card-body text-center p-4">
                 <div class="mb-3">
-        
-                        </div>
+                    <img src="{{ user.get_profile_image_url() }}" 
+                         alt="{{ user.name }}'s Profile" 
+                         class="rounded-circle border border-3"
+                         style="width: 120px; height: 120px; object-fit: cover; border-color: var(--rmit-red) !important;">
+                </div>
                 <h3 class="card-title">{{ user.name }}</h3>
                 <h6 class="text-muted mb-3">{{ user.age }} years old</h6>
                 

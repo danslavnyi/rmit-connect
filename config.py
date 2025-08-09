@@ -83,10 +83,10 @@ class DevelopmentConfig(Config):
     # Development file uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 5MB limit
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 4MB limit
 
     # Allowed file extensions for uploads
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
 class ProductionConfig(Config):
@@ -129,7 +129,7 @@ class ProductionConfig(Config):
     # Production file uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 5MB limit
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # 4MB limit
 
     # Security enhancements
     WTF_CSRF_ENABLED = True
@@ -139,7 +139,7 @@ class ProductionConfig(Config):
     LOG_LEVEL = 'INFO'
 
     # Allowed file extensions for uploads
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
 # Configuration selection

@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import and_, exists
+from sqlalchemy import and_, exists, text
 from sqlalchemy.orm import aliased
 from security import require_rate_limit, SecurityUtils
 from flask_mail import Message
@@ -16,6 +16,11 @@ from email.mime.multipart import MIMEMultipart
 import os
 import re
 import time
+import uuid
+from werkzeug.utils import secure_filename
+from PIL import Image
+import io
+import glob
 
 # Cache control constants
 CACHE_MAX_AGE_ONE_YEAR = 31536000  # 1 year in seconds
@@ -184,6 +189,21 @@ def send_like_notification_email(user, liker):
     except Exception as e:
         app.logger.error(f"SMTP error: {str(e)}")
         return False, f"Failed to send like notification email: {str(e)}"
+
+
+def cleanup_temp_files(upload_folder):
+    """Clean up temporary files older than 1 hour"""
+    try:
+        temp_pattern = os.path.join(upload_folder, "temp_*")
+        current_time = time.time()
+
+        for temp_file in glob.glob(temp_pattern):
+            # Remove files older than 1 hour
+            if os.path.exists(temp_file) and (current_time - os.path.getmtime(temp_file)) > 3600:
+                os.remove(temp_file)
+                app.logger.info(f"Cleaned up temporary file: {temp_file}")
+    except Exception as e:
+        app.logger.error(f"Error cleaning up temp files: {str(e)}")
 
 
 @app.route('/')
@@ -369,8 +389,21 @@ def profile():
         contact_value = request.form.get('contact_value', '').strip()
 
         # Validate required fields
-        if not name or not age or not education or not country:
-            flash('Please fill in all required fields.', 'danger')
+        validation_errors = []
+        if not name:
+            validation_errors.append('Name is required')
+        if not age:
+            validation_errors.append('Age is required')
+        elif not age.isdigit() or int(age) < 13 or int(age) > 120:
+            validation_errors.append('Age must be between 13 and 120')
+        if not education:
+            validation_errors.append('Education is required')
+        if not country:
+            validation_errors.append('Country is required')
+
+        if validation_errors:
+            for error in validation_errors:
+                flash(error, 'danger')
             return redirect(url_for('dashboard'))
 
         # Update user profile
@@ -388,16 +421,16 @@ def profile():
             current_user.instagram = contact_value
             current_user.phone_number = None
 
-        current_user.profile_completed = True
+        # Mark profile as completed only if all required fields are filled
+        if name and age and education and country:
+            current_user.profile_completed = True
+
         db.session.commit()
 
         flash('Your profile has been updated successfully.', 'success')
         return redirect(url_for('dashboard'))
 
-    # GET request - show profile form if not completed
-    if not current_user.profile_completed:
-        return render_template('dashboard.html', user=current_user, force_profile_modal=True)
-
+    # GET request - redirect to dashboard (modal will handle profile editing)
     return redirect(url_for('dashboard'))
 
 
@@ -405,12 +438,9 @@ def profile():
 @login_required
 def dashboard():
     """User dashboard - requires authentication"""
-    is_new_user = not current_user.profile_completed
 
-    # If user just completed profile, don't show onboarding modal again
-    force_profile_modal = False
-    if is_new_user:
-        force_profile_modal = True
+    # Check if user is new (has incomplete profile)
+    is_new_user = current_user.is_new_user()
 
     # Get mutual matches and liked by users using optimized functions
     mutual_matches = get_mutual_matches(current_user.id)
@@ -420,8 +450,7 @@ def dashboard():
                            user=current_user,
                            mutual_matches=mutual_matches,
                            liked_by=liked_by,
-                           is_new_user=is_new_user,
-                           force_profile_modal=force_profile_modal)
+                           is_new_user=is_new_user)
 
 
 @app.route('/history')
@@ -835,6 +864,181 @@ def swipe(user_id, action):
     return '', 204
 
 
+@app.route('/upload_profile_image', methods=['POST'])
+@login_required
+@require_rate_limit(max_requests=10, window=300)  # 10 uploads per 5 minutes
+def upload_profile_image():
+    """Upload and process profile image"""
+    try:
+        # Check if file was uploaded
+        if 'profile_image' not in request.files:
+            return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+
+        file = request.files['profile_image']
+
+        # Check if file is empty
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+
+        # Validate file type
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        if not file.filename.lower().endswith(tuple('.' + ext for ext in allowed_extensions)):
+            return jsonify({'success': False, 'error': 'Invalid file type. Allowed: PNG, JPG, JPEG, GIF, WEBP'}), 400
+
+        # Check file size (4MB limit)
+        file.seek(0, 2)  # Seek to end to get file size
+        file_size = file.tell()
+        file.seek(0)  # Reset to beginning
+
+        max_size_bytes = 4 * 1024 * 1024  # 4MB in bytes
+        if file_size > max_size_bytes:
+            return jsonify({'success': False, 'error': 'File size must be less than 4MB'}), 400
+
+        # Generate secure filename
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        secure_name = f"user_{current_user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+        # Get upload folder
+        upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
+
+        # Ensure upload folder exists
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # Clean up old temporary files
+        cleanup_temp_files(upload_folder)
+
+        # Save original file temporarily
+        temp_file_path = os.path.join(upload_folder, f"temp_{secure_name}")
+        file.save(temp_file_path)
+
+        # Process image for optimization and compression
+        try:
+            with Image.open(temp_file_path) as img:
+                # Only convert to RGB if absolutely necessary (for JPEG output)
+                # This preserves original colors better
+                original_mode = img.mode
+                app.logger.info(
+                    f"Processing image: {secure_name}, Original mode: {original_mode}, Size: {img.size}")
+
+                # Calculate optimal dimensions (max 600x600 for better performance)
+                max_size = (600, 600)
+                original_size = img.size
+
+                # Resize if image is too large
+                if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    app.logger.info(
+                        f"Resized image from {original_size} to {img.size}")
+
+                # Determine optimal format and quality based on original
+                if file_extension.lower() in ['jpg', 'jpeg']:
+                    # For JPEG, convert to RGB only if needed
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+                    output_format = 'JPEG'
+                    quality = 95  # Maximum quality to preserve colors
+                    optimize = True
+                elif file_extension.lower() == 'png':
+                    # For PNG, keep original mode if possible, only convert to RGB for JPEG output
+                    if img.mode not in ('RGB', 'L', 'RGBA'):
+                        img = img.convert('RGB')
+                    elif img.mode == 'RGBA':
+                        # Convert RGBA to RGB with white background to preserve colors
+                        background = Image.new(
+                            'RGB', img.size, (255, 255, 255))
+                        # Use alpha channel as mask
+                        background.paste(img, mask=img.split()[-1])
+                        img = background
+                        app.logger.info(
+                            f"Converted RGBA to RGB with white background")
+                    output_format = 'JPEG'
+                    quality = 95  # Maximum quality to preserve colors
+                    optimize = True
+                    secure_name = secure_name.rsplit('.', 1)[0] + '.jpg'
+                elif file_extension.lower() == 'webp':
+                    # Keep WebP format with original colors
+                    if img.mode not in ('RGB', 'RGBA'):
+                        img = img.convert('RGB')
+                    output_format = 'WEBP'
+                    quality = 95  # Maximum quality for WebP
+                    optimize = True
+                else:
+                    # For other formats, convert to RGB only if needed
+                    if img.mode not in ('RGB', 'L'):
+                        if img.mode == 'RGBA':
+                            # Convert RGBA to RGB with white background to preserve colors
+                            background = Image.new(
+                                'RGB', img.size, (255, 255, 255))
+                            # Use alpha channel as mask
+                            background.paste(img, mask=img.split()[-1])
+                            img = background
+                            app.logger.info(
+                                f"Converted RGBA to RGB with white background")
+                        else:
+                            img = img.convert('RGB')
+                    output_format = 'JPEG'
+                    quality = 95  # Maximum quality to preserve colors
+                    optimize = True
+                    secure_name = secure_name.rsplit('.', 1)[0] + '.jpg'
+
+                app.logger.info(
+                    f"Final image mode: {img.mode}, Format: {output_format}, Quality: {quality}%")
+
+                # Debug: Check if image has colors
+                if img.mode == 'RGB':
+                    # Sample a few pixels to verify colors
+                    sample_pixels = [
+                        img.getpixel((0, 0)),
+                        img.getpixel((img.width//2, img.height//2)),
+                        img.getpixel((img.width-1, img.height-1))
+                    ]
+                    app.logger.info(f"Sample pixel colors: {sample_pixels}")
+
+                # Save optimized image
+                final_file_path = os.path.join(upload_folder, secure_name)
+                img.save(final_file_path, output_format,
+                         quality=quality, optimize=optimize)
+
+                # Remove temporary file
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+
+                # Get final file size for logging
+                final_size = os.path.getsize(final_file_path)
+                compression_ratio = (1 - (final_size / file_size)) * 100
+
+                app.logger.info(
+                    f"Image compressed: {file_size} bytes -> {final_size} bytes ({compression_ratio:.1f}% reduction)")
+                app.logger.info(
+                    f"Image mode: {original_mode} -> {img.mode}, Quality: {quality}%")
+
+        except Exception as e:
+            app.logger.error(f"Error processing image {secure_name}: {str(e)}")
+            app.logger.error(
+                f"Image mode was: {img.mode if 'img' in locals() else 'unknown'}")
+            # If processing fails, use original file but rename it
+            if os.path.exists(temp_file_path):
+                os.rename(temp_file_path, os.path.join(
+                    upload_folder, secure_name))
+            else:
+                return jsonify({'success': False, 'error': 'Failed to process image'}), 500
+
+        # Update user's profile image in database
+        current_user.profile_image = secure_name
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'image_url': current_user.get_profile_image_url(),
+            'message': 'Profile image updated successfully!'
+        })
+
+    except Exception as e:
+        app.logger.error(f"Error uploading profile image: {str(e)}")
+        return jsonify({'success': False, 'error': 'An error occurred while uploading the image'}), 500
+
+
 # Performance and SEO routes
 @app.route('/health')
 def health_check():
@@ -842,7 +1046,7 @@ def health_check():
     start_time = time.time()
     try:
         # Test database connection
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         db_status = 'ok'
     except Exception as e:
         db_status = f'error: {str(e)}'
@@ -879,6 +1083,46 @@ def internal_error(error):
     return render_template('base.html',
                            title='Server Error',
                            content='<div class="text-center"><h1>500</h1><p>Internal server error.</p></div>'), 500
+
+
+@app.route('/debug_image/<filename>')
+def debug_image(filename):
+    """Debug route to check uploaded image properties"""
+    try:
+        upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads'))
+        file_path = os.path.join(upload_folder, filename)
+
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'File not found'}), 404
+
+        with Image.open(file_path) as img:
+            # Get image properties
+            info = {
+                'mode': img.mode,
+                'size': img.size,
+                'format': img.format,
+                'filename': filename,
+                'file_size': os.path.getsize(file_path)
+            }
+
+            # Sample some pixels to check colors
+            if img.mode == 'RGB':
+                sample_pixels = [
+                    img.getpixel((0, 0)),
+                    img.getpixel((img.width//2, img.height//2)),
+                    img.getpixel((img.width-1, img.height-1))
+                ]
+                info['sample_pixels'] = sample_pixels
+
+                # Check if image is grayscale (all R=G=B)
+                is_grayscale = all(r == g == b for r, g, b in sample_pixels)
+                info['is_grayscale'] = is_grayscale
+
+            return jsonify(info)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/uploads/<filename>')

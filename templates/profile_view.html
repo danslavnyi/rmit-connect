@@ -9,9 +9,10 @@
             <div class="card">
                 <div class="card-header text-center">
                     <div class="mb-3">
-                        <div class="mx-auto profile-image" style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-person-fill" style="font-size: 3rem; color: white;"></i>
-                        </div>
+                        <img src="{{ user.get_profile_image_url() }}" 
+                             alt="{{ user.name }}'s Profile" 
+                             class="mx-auto profile-image rounded-circle border border-3"
+                             style="width: 100px; height: 100px; object-fit: cover; border-color: var(--rmit-red) !important;">
                     </div>
                     <h3 class="text-white mb-1">{{ user.name }}</h3>
                     <p class="mb-0" style="color: var(--rmit-aqua);">{{ user.age }} years old</p>

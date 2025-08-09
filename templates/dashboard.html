@@ -25,6 +25,26 @@
                     <div class="d-flex justify-content-center align-items-center" style="min-height: 350px;">
                         <!-- Profile Info -->
                         <div class="w-100">
+                            <!-- Profile Image Section -->
+                            <div class="row mb-4">
+                                <div class="col-12 text-center">
+                                    <div class="profile-image-container">
+                                        <img id="profileImage" src="{{ user.get_profile_image_url() }}" 
+                                             alt="Profile Image" 
+                                             class="profile-image rounded-circle border border-3"
+                                             style="width: 150px; height: 150px; object-fit: cover; border-color: var(--rmit-red) !important; filter: none; -webkit-filter: none; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+                                        <div class="profile-image-overlay" onclick="document.getElementById('profileImageInput').click();">
+                                            <i class="bi bi-camera-fill"></i>
+                                            <span>Change Photo</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" onchange="uploadProfileImage(this)">
+                                    <div class="mt-2">
+                                        <small class="text-muted">Click on the image to upload a new profile photo</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="row g-4 text-center justify-content-center align-items-center">
                                 <div class="col-md-6 mb-2">
                                     <h6 style="color: var(--rmit-blue);"><i class="bi bi-person-badge-fill me-2"></i>Name</h6>
@@ -247,32 +267,67 @@
 </div>
 
 <!-- Onboarding Modal -->
-<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('profile') }}">
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="{{ url_for('profile') }}" id="onboardingForm">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="onboardingModalLabel">Complete Your Profile</h5>
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="onboardingModalLabel">
+            <i class="bi bi-person-plus-fill me-2"></i>Welcome to RMIT Connect!
+          </h5>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label for="name" class="form-label">Name</label>
-            <input name="name" type="text" class="form-control" value="{{ user.name or '' }}" required>
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Complete your profile</strong> to start connecting with other RMIT students!
           </div>
-          <div class="mb-3">
-            <label for="age" class="form-label">Age</label>
-            <input name="age" type="number" class="form-control" value="{{ user.age or '' }}" required>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="name" class="form-label">
+                  <i class="bi bi-person-fill me-1"></i>Full Name <span class="text-danger">*</span>
+                </label>
+                <input name="name" type="text" class="form-control" value="{{ user.name or '' }}" required>
+                <div class="form-text">Enter your full name as you'd like others to see it</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="age" class="form-label">
+                  <i class="bi bi-calendar-fill me-1"></i>Age <span class="text-danger">*</span>
+                </label>
+                <input name="age" type="number" class="form-control" value="{{ user.age or '' }}" min="13" max="120" required>
+                <div class="form-text">Must be between 13 and 120 years old</div>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="education" class="form-label">Education</label>
-            <input name="education" type="text" class="form-control" value="{{ user.education or '' }}">
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="education" class="form-label">
+                  <i class="bi bi-mortarboard-fill me-1"></i>Education <span class="text-danger">*</span>
+                </label>
+                <input name="education" type="text" class="form-control" value="{{ user.education or '' }}" required>
+                <div class="form-text">e.g., Bachelor of Computer Science, RMIT University</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="country" class="form-label">
+                  <i class="bi bi-geo-alt-fill me-1"></i>Country <span class="text-danger">*</span>
+                </label>
+                <input name="country" type="text" class="form-control" value="{{ user.country or '' }}" required>
+                <div class="form-text">Where are you from?</div>
+              </div>
+            </div>
           </div>
+          
           <div class="mb-3">
-            <label for="country" class="form-label">Country</label>
-            <input name="country" type="text" class="form-control" value="{{ user.country or '' }}">
-          </div>
-          <div class="mb-3">
-            <label for="contact_type" class="form-label">Contact Information</label>
+            <label for="contact_type" class="form-label">
+              <i class="bi bi-telephone-fill me-1"></i>Contact Information
+            </label>
             <div class="input-group">
               <select class="form-select" id="contact_type" name="contact_type" style="max-width: 150px;">
                 <option value="phone" {% if user.phone_number %}selected{% endif %}>Phone</option>
@@ -282,14 +337,21 @@
                      value="{% if user.phone_number and user.phone_number != 'None' %}{{ user.phone_number }}{% elif user.instagram and user.instagram != 'None' %}{{ user.instagram }}{% endif %}"
                      placeholder="Enter contact info">
             </div>
+            <div class="form-text" id="contact_help">Optional: Share contact info with your connections</div>
           </div>
+          
           <div class="mb-3">
-            <label for="interests" class="form-label">Interests & Hobbies</label>
-            <textarea name="interests" class="form-control" placeholder="Optional (e.g. music, sports, coding)">{{ user.interests or '' }}</textarea>
+            <label for="interests" class="form-label">
+              <i class="bi bi-heart-fill me-1"></i>Interests & Hobbies
+            </label>
+            <textarea name="interests" class="form-control" rows="3" placeholder="Tell us about your interests (e.g., music, sports, coding, travel, gaming)">{{ user.interests or '' }}</textarea>
+            <div class="form-text">This helps others find common interests with you</div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle me-1"></i>Complete Profile
+          </button>
         </div>
       </div>
     </form>
@@ -361,7 +423,108 @@ document.addEventListener('DOMContentLoaded', function() {
         contactType.addEventListener('change', updateContactPlaceholder);
     }
 });
+
+// Profile image upload functionality
+function uploadProfileImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Please select a valid image file (JPEG, PNG, GIF, or WEBP)', 'error');
+        return;
+    }
+    
+    // Validate file size (max 4MB)
+    const maxSize = 4 * 1024 * 1024; // 4MB
+    if (file.size > maxSize) {
+        showNotification('Image file size must be less than 4MB. Please choose a smaller image.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const profileImage = document.getElementById('profileImage');
+    const originalSrc = profileImage.src;
+    profileImage.style.opacity = '0.5';
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('profile_image', file);
+    
+    // Upload image
+    fetch('/upload_profile_image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update image source
+            profileImage.src = data.image_url + '?t=' + new Date().getTime(); // Cache bust
+            profileImage.style.opacity = '1';
+            showNotification(data.message, 'success');
+        } else {
+            showNotification(data.error || 'Upload failed', 'error');
+            profileImage.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification('An error occurred while uploading the image', 'error');
+        profileImage.style.opacity = '1';
+    });
+}
 </script>
+
+<style>
+.profile-image-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.profile-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 14px;
+}
+
+.profile-image-container:hover .profile-image-overlay {
+    opacity: 1;
+}
+
+.profile-image-overlay i {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.profile-image {
+    transition: opacity 0.3s ease;
+    filter: none !important;
+    -webkit-filter: none !important;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    /* Ensure colors are preserved */
+    color-scheme: normal;
+    color-adjust: exact;
+}
+</style>
 
 {% if is_new_user %}
 <script>
@@ -370,8 +533,55 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('User profile_completed: {{ user.profile_completed|lower }}');
     console.log('User name: {{ user.name or "None" }}');
     console.log('User age: {{ user.age or "null" }}');
+    
+    // Show onboarding modal for new users
     const modal = new bootstrap.Modal(document.getElementById('onboardingModal'));
     modal.show();
+    
+    // Add form validation
+    const form = document.getElementById('onboardingForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const name = form.querySelector('input[name="name"]').value.trim();
+            const age = form.querySelector('input[name="age"]').value.trim();
+            const education = form.querySelector('input[name="education"]').value.trim();
+            const country = form.querySelector('input[name="country"]').value.trim();
+            
+            if (!name || !age || !education || !country) {
+                e.preventDefault();
+                showNotification('Please fill in all required fields marked with *', 'error');
+                return false;
+            }
+            
+            if (age < 13 || age > 120) {
+                e.preventDefault();
+                showNotification('Age must be between 13 and 120 years old', 'error');
+                return false;
+            }
+        });
+    }
+    
+    // Initialize contact field functionality for onboarding modal
+    const contactType = document.getElementById('contact_type');
+    const contactValue = document.getElementById('contact_value');
+    const contactHelp = document.getElementById('contact_help');
+    
+    if (contactType && contactValue && contactHelp) {
+        function updateOnboardingContactPlaceholder() {
+            if (contactType.value === 'phone') {
+                contactValue.placeholder = '+61 123 456 789';
+                contactValue.type = 'tel';
+                contactHelp.textContent = 'Optional: Enter your phone number for connections to reach you';
+            } else if (contactType.value === 'instagram') {
+                contactValue.placeholder = '@username';
+                contactValue.type = 'text';
+                contactHelp.textContent = 'Optional: Enter your Instagram username (without @) for connections to reach you';
+            }
+        }
+        
+        updateOnboardingContactPlaceholder();
+        contactType.addEventListener('change', updateOnboardingContactPlaceholder);
+    }
 });
 </script>
 {% else %}
