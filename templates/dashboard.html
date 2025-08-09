@@ -104,7 +104,16 @@
                     <div class="row g-3">
                         <div class="col-md-3">
                             <div class="d-grid">
-                                <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                                <a href="{{ url_for('explore') }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-compass-fill"></i> Explore Students
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('connections') }}" class="btn btn-outline-dark" style="border-color: var(--rmit-blue); color: var(--rmit-blue);"
+                                   onmouseover="this.style.backgroundColor='var(--rmit-blue)'; this.style.color='white';" 
+                                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--rmit-blue)';">
                                     <i class="bi bi-heart-fill"></i> My Connections 
                                     {% if mutual_matches %}
                                         <span class="badge bg-danger ms-1">{{ mutual_matches|length }}</span>
@@ -114,18 +123,18 @@
                         </div>
                         <div class="col-md-3">
                             <div class="d-grid">
+                                <button class="btn btn-outline-primary" onclick="showAccountSettings()">
+                                    <i class="bi bi-gear"></i> Edit profile
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
                                 <a href="{{ url_for('history') }}" class="btn btn-outline-dark" style="border-color: var(--rmit-blue); color: var(--rmit-blue);" 
                                    onmouseover="this.style.backgroundColor='var(--rmit-blue)'; this.style.color='white';" 
                                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--rmit-blue)';">
                                     <i class="bi bi-clock-history"></i> My History
                                 </a>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-grid">
-                                <button class="btn btn-outline-primary" onclick="showAccountSettings()">
-                                    <i class="bi bi-gear"></i> Edit profile
-                                </button>
                             </div>
                         </div>
                         <div class="col-md-3">
