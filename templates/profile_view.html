@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }}'s Profile - RMIT Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <div class="mb-3">
+                        <img src="{{ user.get_profile_image_url() }}" 
+                             alt="{{ user.name }}'s Profile" 
+                             class="mx-auto profile-image rounded-circle border border-3"
+                             style="width: 100px; height: 100px; object-fit: cover; border-color: var(--rmit-red) !important;">
+                    </div>
+                    <h3 class="text-white mb-1">{{ user.name }}</h3>
+                    <p class="mb-0" style="color: var(--rmit-aqua);">{{ user.age }} years old</p>
+                </div>
+                
+
+                <div class="card-body p-4 text-center">
+                    <!-- Education -->
+                    <div class="mb-4">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
+                            <i class="bi bi-mortarboard-fill me-2" style="color: var(--rmit-red);"></i>Education
+                        </h6>
+                        <p class="mb-0 profile-data">{{ user.education }}</p>
+                    </div>
+
+                    <!-- Country -->
+                    <div class="mb-4">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
+                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--rmit-aqua);"></i>Location
+                        </h6>
+                        <p class="mb-0 profile-data">{{ user.country }}</p>
+                    </div>
+
+                    <!-- About Me / Bio -->
+                    {% if user.bio %}
+                    <div class="mb-4">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
+                            <i class="bi bi-person-lines-fill me-2" style="color: var(--rmit-green);"></i>About Me
+                        </h6>
+                        <p class="mb-0 profile-data" style="line-height: 1.6;">{{ user.bio }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Interests -->
+                    <div class="mb-4">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
+                            <i class="bi bi-heart-fill me-2" style="color: var(--rmit-lavender);"></i>Interests & Hobbies
+                        </h6>
+                        <p class="mb-0 profile-data" style="line-height: 1.6;">{{ user.interests }}</p>
+                    </div>
+
+                    <!-- RMIT Connection Badge -->
+                    <div class="text-center mb-4">
+                        <span class="badge px-3 py-2" style="background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue)); color: white; font-size: 14px;">
+                            <i class="bi bi-people-fill me-2"></i>RMIT Student
+                        </span>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left"></i> Back to History
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add some custom styling for this profile view -->
+<style>
+.profile-image {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 84, 0.15);
+}
+
+.card {
+    box-shadow: 0 8px 24px rgba(0, 0, 84, 0.12);
+}
+
+.card-body h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.profile-data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.badge {
+    border-radius: 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(230, 0, 40, 0.2);
+}
+</style>
+{% endblock %}

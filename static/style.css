@@ -1,0 +1,503 @@
+/* RMIT Brand Guidelines - Core Look */
+
+/* Import RMIT Brand Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@400;600;700&display=swap');
+
+/* RMIT Core Brand Colors */
+:root {
+    --rmit-red: #E60028;
+    --rmit-blue: #000054;
+    --rmit-aqua: #00DCB4;
+    --rmit-lavender: #C864C8;
+    --rmit-white: #FFFFFF;
+    --rmit-black: #000000;
+    --rmit-grey: #666666;
+    --rmit-light-grey: #F5F5F5;
+    
+    /* Override Bootstrap variables */
+    --bs-primary: var(--rmit-red);
+    --bs-secondary: var(--rmit-blue);
+    --bs-success: var(--rmit-aqua);
+    --bs-info: var(--rmit-lavender);
+    --bs-light: var(--rmit-light-grey);
+    --bs-dark: var(--rmit-blue);
+}
+
+/* Global Typography - RMIT Brand */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px; /* ≥10pt body text */
+    line-height: 1.6;
+    color: var(--rmit-black);
+    background-color: var(--rmit-white);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Headlines - Museo 700 substitute with Poppins/Montserrat */
+h1, h2, h3, h4, h5, h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6,
+.navbar-brand {
+    font-family: 'Poppins', 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: var(--rmit-blue);
+}
+
+h1, .display-1 { font-size: 36px; } /* ≥18pt headlines */
+h2, .display-2 { font-size: 30px; }
+h3, .display-3 { font-size: 26px; }
+h4, .display-4 { font-size: 22px; }
+h5, .display-5 { font-size: 20px; }
+h6, .display-6 { font-size: 18px; }
+
+/* RMIT Split Pixel Design Element */
+.rmit-pixel-divider {
+    position: relative;
+    height: 20px;
+    background: linear-gradient(90deg, 
+        var(--rmit-red) 0%, var(--rmit-red) 20%,
+        var(--rmit-blue) 20%, var(--rmit-blue) 40%,
+        var(--rmit-aqua) 40%, var(--rmit-aqua) 60%,
+        var(--rmit-red) 60%, var(--rmit-red) 80%,
+        var(--rmit-blue) 80%, var(--rmit-blue) 100%);
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+/* Navigation - RMIT Brand */
+.navbar {
+    background: var(--rmit-blue) !important;
+    padding: 1rem 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 84, 0.2);
+}
+
+.navbar-brand {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--rmit-white) !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-brand i {
+    color: var(--rmit-red);
+    font-size: 28px;
+}
+
+.navbar-nav .nav-link {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--rmit-white) !important;
+    margin: 0 0.5rem;
+    padding: 0.75rem 1.25rem !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: var(--rmit-red);
+    transform: translateY(-2px);
+}
+
+/* RMIT Buttons - Core Brand */
+.btn {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    transition: all 0.3s ease;
+    min-height: 35px;
+    padding: 0.75rem 1.5rem;
+    font-size: 14px;
+}
+
+.btn-lg {
+    min-height: 50px;
+    padding: 1rem 2rem;
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: var(--rmit-red);
+    color: var(--rmit-white);
+    box-shadow: 0 4px 12px rgba(230, 0, 40, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: #C40023;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(230, 0, 40, 0.4);
+}
+
+.btn-secondary {
+    background-color: var(--rmit-blue);
+    color: var(--rmit-white);
+    box-shadow: 0 4px 12px rgba(0, 0, 84, 0.3);
+}
+
+.btn-secondary:hover {
+    background-color: #000040;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 84, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--rmit-red);
+    color: var(--rmit-red);
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--rmit-red);
+    color: var(--rmit-white);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: var(--rmit-aqua);
+    color: var(--rmit-black);
+}
+
+.btn-success:hover {
+    background-color: #00C4A3;
+    color: var(--rmit-black);
+}
+
+/* Cards - RMIT Brand */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 84, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 84, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue));
+    color: var(--rmit-white);
+    border: none;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    padding: 1.5rem;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* Forms - RMIT Brand */
+.form-control {
+    border: 2px solid var(--rmit-light-grey);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--rmit-red);
+    box-shadow: 0 0 0 0.2rem rgba(230, 0, 40, 0.25);
+    outline: none;
+}
+
+.form-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--rmit-blue);
+    margin-bottom: 0.5rem;
+}
+
+/* Alerts - RMIT Brand */
+.alert {
+    border: none;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background-color: var(--rmit-aqua);
+    color: var(--rmit-black);
+}
+
+.alert-danger {
+    background-color: var(--rmit-red);
+    color: var(--rmit-white);
+}
+
+.alert-info {
+    background-color: var(--rmit-lavender);
+    color: var(--rmit-white);
+}
+
+/* Footer - RMIT Brand */
+footer {
+    background: var(--rmit-blue);
+    color: var(--rmit-white);
+    margin-top: auto;
+    padding: 2rem 0;
+    position: relative;
+}
+
+footer::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(90deg, 
+        var(--rmit-red) 0%, var(--rmit-red) 25%,
+        var(--rmit-aqua) 25%, var(--rmit-aqua) 50%,
+        var(--rmit-red) 50%, var(--rmit-red) 75%,
+        var(--rmit-blue) 75%, var(--rmit-blue) 100%);
+    clip-path: polygon(5% 0, 95% 0, 100% 100%, 0% 100%);
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+/* RMIT Hero Sections */
+.rmit-hero {
+    background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue));
+    color: var(--rmit-white);
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.rmit-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: var(--rmit-white);
+    clip-path: polygon(0 100%, 100% 100%, 95% 0, 5% 0);
+}
+
+/* Profile Images - Greyscale with Gradient */
+.profile-image {
+    filter: grayscale(100%);
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.profile-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(230, 0, 40, 0.1), rgba(0, 0, 84, 0.1));
+    pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 20px;
+    }
+    
+    h1, .display-1 { font-size: 28px; }
+    h2, .display-2 { font-size: 24px; }
+    h3, .display-3 { font-size: 22px; }
+    
+    .btn-lg {
+        min-height: 45px;
+        padding: 0.875rem 1.75rem;
+        font-size: 15px;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .rmit-hero {
+        padding: 2rem 0;
+    }
+}
+
+/* Accessibility - Strong Contrast */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 3px solid var(--rmit-aqua);
+    outline-offset: 2px;
+}
+
+/* Call to Action Section */
+.cta-heading {
+    color: #f8f9fa !important; /* Slightly off-white for RMIT branding */
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Smooth Transitions */
+* {
+    transition: all 0.3s ease;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ==============================================
+   IMAGE OPTIMIZATION & PERFORMANCE
+   ============================================== */
+
+/* Lazy Loading Images */
+img.lazy {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+img.lazy.loaded {
+    opacity: 1;
+}
+
+/* Profile Image Containers */
+.profile-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+}
+
+.profile-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.profile-image-container:hover img {
+    transform: scale(1.05);
+}
+
+/* Responsive Image Sizes */
+.profile-image-thumbnail {
+    width: 60px;
+    height: 60px;
+}
+
+.profile-image-small {
+    width: 120px;
+    height: 120px;
+}
+
+.profile-image-medium {
+    width: 200px;
+    height: 200px;
+}
+
+.profile-image-large {
+    width: 400px;
+    height: 400px;
+}
+
+/* Loading Placeholders */
+.placeholder-image {
+    background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    border-radius: 12px;
+    min-height: 200px;
+}
+
+.placeholder-image i {
+    font-size: 3rem;
+    opacity: 0.5;
+}
+
+/* Image Loading Skeleton */
+.image-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Performance Optimizations */
+picture {
+    display: block;
+}
+
+picture img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+/* WebP Support Indicators */
+.webp .fallback-image {
+    display: none;
+}
+
+.no-webp .webp-image {
+    display: none;
+}
+
+/* Image Upload Preview */
+.image-upload-preview {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+}
+
+/* Compression Quality Indicators */
+.image-quality-high {
+    border: 2px solid #28a745;
+}
+
+.image-quality-medium {
+    border: 2px solid #ffc107;
+}
+
+.image-quality-low {
+    border: 2px solid #dc3545;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .profile-image-large {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .profile-image-medium {
+        width: 150px;
+        height: 150px;
+    }
+}

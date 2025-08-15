@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: rmit-connect
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn --config gunicorn_config.py main:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.5
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BASE_URL
+        value: https://rmit-connect.onrender.com
+      # Performance optimizations
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: GUNICORN_TIMEOUT
+        value: 30
+
+  - type: pserv
+    name: rmit-connect-db
+    plan: free
+    env: postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: rmit_connect
+      - key: POSTGRES_USER
+        value: rmit_user

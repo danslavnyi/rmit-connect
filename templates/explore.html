@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Explore Students{% endblock %}
+
+{% block content %}
+<style>
+/* Swipe Animation CSS */
+#profile-card {
+    transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+}
+
+#profile-card.swipe-left {
+    transform: translateX(-100vw) rotate(-30deg);
+    opacity: 0;
+}
+
+#profile-card.swipe-right {
+    transform: translateX(100vw) rotate(30deg);
+    opacity: 0;
+}
+
+.swipe-btn {
+    transition: transform 0.2s ease;
+}
+
+.swipe-btn:active {
+    transform: scale(0.95);
+}
+
+/* Animation for button feedback */
+.pass-btn:hover {
+    transform: translateX(-5px);
+    transition: transform 0.2s ease;
+}
+
+.like-btn:hover {
+    transform: translateX(5px);
+    transition: transform 0.2s ease;
+}
+</style>
+
+<div class="container">
+    <h2 class="my-4 text-center">Discover New Friends</h2>
+    
+    {% if user %}
+    <div id="profile-card" class="mx-auto" style="max-width: 400px;">
+        <div class="card shadow-lg">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <img src="{{ user.get_profile_image_url() }}" 
+                         alt="{{ user.name }}'s Profile" 
+                         class="rounded-circle border border-3 profile-image"
+                         style="width: 120px; height: 120px; object-fit: cover; border-color: var(--rmit-red) !important;"
+                         onerror="this.onerror=null; this.src='/static/images/default-profile.png';">
+                </div>
+                <h3 class="card-title">{{ user.name }}</h3>
+                <h6 class="text-muted mb-3">{{ user.age }} years old</h6>
+                
+                <div class="text-start mb-4">
+                    <p><strong><i class="bi bi-book"></i> Education:</strong><br>{{ user.education }}</p>
+                    <p><strong><i class="bi bi-geo-alt"></i> Country:</strong><br>{{ user.country }}</p>
+                    {% if user.bio %}
+                    <p><strong><i class="bi bi-person-lines-fill"></i> About:</strong><br>{{ user.bio }}</p>
+                    {% endif %}
+                    <p><strong><i class="bi bi-heart"></i> Interests:</strong><br>{{ user.interests }}</p>
+                </div>
+                
+                <div class="d-flex justify-content-around">
+                    <button class="btn btn-danger btn-lg swipe-btn pass-btn" data-user-id="{{ user.id }}" data-action="decline">
+                        <i class="bi bi-x-circle"></i> Pass
+                    </button>
+                    <button class="btn btn-success btn-lg swipe-btn like-btn" data-user-id="{{ user.id }}" data-action="like">
+                        <i class="bi bi-heart-fill"></i> Like
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Match Modal -->
+    <div class="modal fade" id="matchModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <h2 class="text-success mb-3">🎉 It's a Match!</h2>
+                    <p class="lead">You and <span id="matchedUserName"></span> both liked each other!</p>
+                    <p>You can now see each other in your connections.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Exploring</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Notification Modal -->
+    <div class="modal fade" id="emailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <h4 id="emailModalTitle"></h4>
+                    <p id="emailModalMsg"></p>
+                    <button type="button" class="btn btn-primary" id="emailModalContinue">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="text-center">
+        <i class="bi bi-people display-1 text-muted mb-3"></i>
+        <h3>No more profiles to explore!</h3>
+        <p class="text-muted">Check back later for new students joining CampusConnect.</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, setting up swipe buttons...');
+    
+    // Image error handling
+    const profileImage = document.querySelector('.profile-image');
+    if (profileImage) {
+        profileImage.addEventListener('error', function() {
+            console.log('Profile image failed to load, using default');
+            this.src = '/static/images/default-profile.png';
+        });
+        
+        // Preload image to check if it exists
+        const img = new Image();
+        img.onload = function() {
+            console.log('Profile image loaded successfully');
+        };
+        img.onerror = function() {
+            console.log('Profile image failed to preload, will use default');
+            profileImage.src = '/static/images/default-profile.png';
+        };
+        img.src = profileImage.src;
+    }
+    
+    document.querySelectorAll('.swipe-btn').forEach(btn => {
+        console.log('Found button:', btn, 'Action:', btn.getAttribute('data-action'));
+        
+        btn.onclick = function(event) {
+            event.preventDefault();
+            console.log('Button clicked!', this);
+            
+            const userId = this.getAttribute('data-user-id');
+            const action = this.getAttribute('data-action');
+            const profileCard = document.getElementById('profile-card');
+            
+            console.log('Starting swipe:', { userId, action });
+            
+            // Add swipe animation based on action
+            if (action === 'decline') {
+                profileCard.classList.add('swipe-left');
+            } else if (action === 'like') {
+                profileCard.classList.add('swipe-right');
+            }
+            
+            // Disable buttons during request
+            document.querySelectorAll('.swipe-btn').forEach(b => {
+                b.disabled = true;
+                b.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Processing...';
+            });
+            
+            // Wait for animation to start before making request
+            setTimeout(() => {
+                fetch(`/swipe/${userId}/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => {
+                    console.log('Response received:', response.status, response.headers.get('content-type'));
+                    if (response.ok) {
+                        // Check if response has content (match case) or is empty (regular swipe)
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        } else {
+                            return null; // Empty response for regular swipes
+                        }
+                    }
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    
+                    // Wait for animation to complete before handling response
+                    setTimeout(() => {
+                        if (data && data.match) {
+                            // Show match modal
+                            document.getElementById('matchedUserName').textContent = data.user_name;
+                            const matchModal = new bootstrap.Modal(document.getElementById('matchModal'));
+                            matchModal.show();
+                            document.getElementById('matchModal').addEventListener('hidden.bs.modal', () => {
+                                location.reload();
+                            });
+                        } else if (data && typeof data.email_sent !== 'undefined') {
+                            // Show email notification modal
+                            const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+                            document.getElementById('emailModalTitle').textContent = data.email_sent ? 'Email Sent!' : 'Email Failed';
+                            document.getElementById('emailModalMsg').textContent = data.email_message;
+                            emailModal.show();
+                            document.getElementById('emailModalContinue').onclick = function() {
+                                emailModal.hide();
+                                location.reload();
+                            };
+                        } else {
+                            // Just reload to get next profile
+                            location.reload();
+                        }
+                    }, 300); // Wait for animation to complete
+                })
+                .catch(error => {
+                    console.error('Error occurred:', error);
+                    // Remove animation class and re-enable buttons on error
+                    profileCard.classList.remove('swipe-left', 'swipe-right');
+                    document.querySelectorAll('.swipe-btn').forEach(b => {
+                        b.disabled = false;
+                        b.innerHTML = b.getAttribute('data-action') === 'like' ? 
+                            '<i class="bi bi-heart-fill"></i> Like' : 
+                            '<i class="bi bi-x-circle"></i> Pass';
+                    });
+                    alert('Error processing swipe. Please try again.');
+                });
+            }, 100); // Small delay to let animation start
+        };
+    });
+});
+</script>
+{% endblock %}

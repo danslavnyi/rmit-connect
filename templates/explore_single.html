@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Student Profile{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="card mx-auto my-5" style="max-width: 500px;">
+        <div class="card-body">
+            <h4>{{ user.name }}</h4>
+            <p><strong>Age:</strong> {{ user.age }}</p>
+            <p><strong>Education:</strong> {{ user.education }}</p>
+            <p><strong>Country:</strong> {{ user.country }}</p>
+            <p><strong>Interests:</strong> {{ user.interests }}</p>
+            <div class="d-flex gap-2 my-3" id="action-buttons">
+                <button class="btn btn-success" id="like-btn">
+                    <i class="bi bi-heart-fill"></i> Like
+                </button>
+                <button class="btn btn-outline-secondary" id="decline-btn">
+                    {% if next_liker_id %}
+                        <i class="bi bi-arrow-right"></i> Decline & Next
+                    {% else %}
+                        <i class="bi bi-x-circle"></i> Decline
+                    {% endif %}
+                </button>
+            </div>
+            <div class="d-flex gap-2 my-3" id="go-back-buttons" style="display:none;">
+                <a href="{{ url_for('explore') }}" class="btn btn-secondary">Go Back to Explore</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Go Back to Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('like-btn').onclick = function() {
+    fetch('/swipe/{{ user.id }}/like', {method: 'POST'})
+        .then(() => window.location.href = "{{ url_for('explore') }}");
+};
+document.getElementById('decline-btn').onclick = function() {
+    fetch('/swipe/{{ user.id }}/decline', {method: 'POST'})
+        .then(() => window.location.href = "{{ url_for('explore') }}");
+};
+</script>
+{% endblock %}

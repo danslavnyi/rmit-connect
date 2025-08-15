@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Start Connecting - RMIT Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <i class="bi bi-people-fill" style="font-size: 3rem; color: var(--rmit-red);"></i>
+                </div>
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <h1 class="h2 fw-bold">Start Connecting</h1>
+                        <p class="fs-5" style="color: var(--rmit-blue);">Meet your bold, collaborative RMIT crew</p>
+                    </div>
+
+                    <!-- Benefits -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-mortarboard-fill me-2" style="color: var(--rmit-aqua);"></i>
+                                <small style="color: var(--rmit-blue);">Study Partners</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-heart-fill me-2" style="color: var(--rmit-red);"></i>
+                                <small style="color: var(--rmit-blue);">Real Friendships</small>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-event me-2" style="color: var(--rmit-lavender);"></i>
+                                <small style="color: var(--rmit-blue);">Campus Events</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-chat-dots-fill me-2" style="color: var(--rmit-aqua);"></i>
+                                <small style="color: var(--rmit-blue);">Study Groups</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signup Form -->
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-semibold">Email Address</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text" style="background-color: var(--rmit-blue); color: white; border-color: var(--rmit-blue);">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="your.rmit.email@student.rmit.edu.au" required 
+                                       value="{{ request.form.get('email', '') }}"
+                                       style="border-color: var(--rmit-blue);">
+                            </div>
+                            <div class="form-text" style="color: var(--rmit-blue);">
+                                <i class="bi bi-shield-check" style="color: var(--rmit-aqua);"></i>
+                                Use your RMIT email to connect with fellow students
+                            </div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg py-3">
+                                <i class="bi bi-person-plus-fill"></i> Create My RMIT Connect Profile
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- How it works -->
+                    <div class="rounded-3 p-3" style="background-color: var(--rmit-light-grey);">
+                        <div class="text-center">
+                            <h6 class="mb-3" style="color: var(--rmit-blue);">
+                                <i class="bi bi-lightning-fill" style="color: var(--rmit-red);"></i> Super Simple Signup
+                            </h6>
+                            <div class="row g-2 text-center">
+                                <div class="col-4">
+                                    <div style="color: var(--rmit-red);">
+                                        <i class="bi bi-1-circle-fill fs-4"></i>
+                                    </div>
+                                    <small style="color: var(--rmit-blue);">Enter Email</small>
+                                </div>
+                                <div class="col-4">
+                                    <div style="color: var(--rmit-blue);">
+                                        <i class="bi bi-2-circle-fill fs-4"></i>
+                                    </div>
+                                    <small style="color: var(--rmit-blue);">Check Inbox</small>
+                                </div>
+                                <div class="col-4">
+                                    <div style="color: var(--rmit-aqua);">
+                                        <i class="bi bi-3-circle-fill fs-4"></i>
+                                    </div>
+                                    <small style="color: var(--rmit-blue);">Start Connecting</small>
+                                </div>
+                            </div>
+                            <p class="mt-2 mb-0" style="color: var(--rmit-blue);">
+                                <small>No passwords, no hassle - just instant access to your RMIT community!</small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Back to home -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--rmit-blue);">
+                            <i class="bi bi-arrow-left"></i> Back to Homepage
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced email validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const email = document.getElementById('email');
+    const emailValue = email.value.trim().toLowerCase();
+    
+    if (!emailValue) {
+        e.preventDefault();
+        email.classList.add('is-invalid');
+        return;
+    }
+});
+
+// Remove invalid class on input
+document.getElementById('email').addEventListener('input', function() {
+    this.classList.remove('is-invalid');
+});
+
+// Add visual feedback for valid email
+document.getElementById('email').addEventListener('blur', function() {
+    const emailValue = this.value.trim();
+    if (emailValue && emailValue.includes('@') && emailValue.includes('.')) {
+        this.classList.add('is-valid');
+    }
+});
+</script>
+{% endblock %}

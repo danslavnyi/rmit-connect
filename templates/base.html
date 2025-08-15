@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ g.csrf_token if g.csrf_token else '' }}">
+    
+    <!-- Performance optimizations -->
+    <meta name="theme-color" content="#e61e2b">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <title>{% block title %}RMIT Connect - Meet Your RMIT Crew{% endblock %}</title>
+    
+    <!-- Bootstrap CSS (without dark theme) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" crossorigin="anonymous">
+    
+    <!-- RMIT Brand CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- RMIT Pixel Divider -->
+    <div class="rmit-pixel-divider"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container position-relative">
+            <!-- RMIT Logo Placeholder (top-left with 10px clear space) -->
+            <div class="position-absolute" style="top: 10px; left: 10px; z-index: 1030;">
+                <div class="d-flex align-items-center justify-content-center" 
+                     style="width: 48px; height: 48px; background-color: var(--rmit-white); border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <strong style="color: var(--rmit-red); font-size: 12px; font-weight: 700;">RMIT</strong>
+                </div>
+            </div>
+            
+            <!-- Custom Hamburger Menu (top-right, opposite of RMIT logo) -->
+            {% if current_user.is_authenticated %}
+            <div class="position-absolute" style="top: 10px; right: 10px; z-index: 1030;">
+                <button class="hamburger-menu" id="hamburgerBtn" onclick="toggleSidebar()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            {% endif %}
+            
+            <a class="navbar-brand" href="{{ url_for('index') }}" style="margin-left: 68px;">
+                <i class="bi bi-people-fill"></i> RMIT Connect
+            </a>
+            
+            <!-- Hide the Bootstrap navbar-toggler (we have our custom one) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="display: none;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Hide the entire navbar menu - all navigation now goes through hamburger sidebar -->
+            <div class="collapse navbar-collapse" id="navbarNav" style="display: none;">
+                <!-- Navigation items hidden - now accessible via hamburger menu -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        <strong>{{ message }}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Sidebar Navigation (available on all pages) -->
+    {% if current_user.is_authenticated %}
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h5 style="color: var(--rmit-red);">
+                <i class="bi bi-people-fill"></i> RMIT Connect
+            </h5>
+            <button class="close-btn" onclick="toggleSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="bi bi-house-fill"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('explore') }}">
+                        <i class="bi bi-compass-fill"></i> Explore Students
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('connections') }}">
+                        <i class="bi bi-heart-fill"></i> My Connections
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('history') }}">
+                        <i class="bi bi-clock-history"></i> My History
+                    </a>
+                </li>
+                <li class="nav-item mt-3">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    {% endif %}
+
+    <!-- Footer with RMIT Branding -->
+    <footer>
+        <div class="container text-center position-relative">
+            <!-- RMIT Logo Placeholder (bottom-right with 10px clear space) -->
+            <div class="position-absolute" style="bottom: 10px; right: 10px;">
+                <div class="d-flex align-items-center justify-content-center" 
+                     style="width: 48px; height: 48px; background-color: var(--rmit-white); border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <strong style="color: var(--rmit-red); font-size: 12px; font-weight: 700;">RMIT</strong>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <h5 class="text-white mb-3">RMIT Connect</h5>
+                    <p class="mb-0">Connecting RMIT students worldwide. Bold. Collaborative. Real uni friends.</p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <small>&copy; 2025 RMIT University. Built with RMIT pride.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+    
+    <!-- WebP Detection and Image Optimization -->
+    <script>
+    // Detect WebP support and set up responsive images
+    function supportsWebP() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    }
+
+    // Set WebP support class on document
+    document.documentElement.classList.add(supportsWebP() ? 'webp' : 'no-webp');
+
+    // Lazy loading for images
+    function lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+
+        images.forEach(img => imageObserver.observe(img));
+    }
+
+    // Initialize lazy loading when DOM is ready
+    document.addEventListener('DOMContentLoaded', lazyLoadImages);
+    </script>
+
+    <!-- Jinja2 Macros for Responsive Images -->
+    {% macro responsive_image(filename, alt_text="", css_class="", size="medium", lazy=true) %}
+        {% if filename %}
+            {% set webp_url = get_optimized_image_url(filename, size) %}
+            {% set jpeg_url = get_optimized_image_url(filename.replace('.webp', '.jpg'), size) %}
+            {% if lazy %}
+                <picture class="{{ css_class }}">
+                    <source data-srcset="{{ webp_url }}" type="image/webp">
+                    <source data-srcset="{{ jpeg_url }}" type="image/jpeg">
+                    <img data-src="{{ webp_url }}" alt="{{ alt_text }}" class="lazy {{ css_class }}" loading="lazy">
+                </picture>
+            {% else %}
+                <picture class="{{ css_class }}">
+                    <source srcset="{{ webp_url }}" type="image/webp">
+                    <source srcset="{{ jpeg_url }}" type="image/jpeg">
+                    <img src="{{ webp_url }}" alt="{{ alt_text }}" class="{{ css_class }}">
+                </picture>
+            {% endif %}
+        {% else %}
+            <div class="placeholder-image {{ css_class }}" style="background: linear-gradient(135deg, #f8f9fa, #dee2e6); display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                <i class="bi bi-person-circle" style="font-size: 3rem;"></i>
+            </div>
+        {% endif %}
+    {% endmacro %}
+
+
+    
+    <!-- Hamburger Menu Styles and JavaScript -->
+    <style>
+    /* Custom Hamburger Menu Styles */
+    .hamburger-menu {
+        background: var(--rmit-red);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .hamburger-menu:hover {
+        background: #cc1a1a;
+        transform: scale(1.05);
+    }
+
+    .hamburger-menu span {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: white;
+        margin: 2px 0;
+        transition: all 0.3s ease;
+        border-radius: 1px;
+    }
+
+    .hamburger-menu.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger-menu.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger-menu.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        width: 300px;
+        height: 100vh;
+        background: white;
+        z-index: 1055;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, var(--rmit-red) 0%, var(--rmit-blue) 100%);
+        color: white;
+    }
+
+    .sidebar-header h5 {
+        margin: 0;
+        color: white !important;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+
+    .close-btn:hover {
+        background: rgba(255,255,255,0.2);
+    }
+
+    .sidebar-content {
+        padding: 20px 0;
+    }
+
+    .sidebar .nav-link {
+        color: var(--rmit-blue);
+        padding: 12px 20px;
+        border: none;
+        text-align: left;
+        width: 100%;
+        background: none;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(227, 25, 55, 0.1);
+        color: var(--rmit-red);
+        padding-left: 30px;
+    }
+
+    .sidebar .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+    }
+
+    .sidebar .nav-link.text-danger:hover {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    /* Sidebar Overlay */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.5);
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    </style>
+    
+    <script>
+    // Global image error handling
+    function handleImageError(img) {
+        if (img.src !== '/static/images/default-profile.png') {
+            console.log('Image failed to load:', img.src, 'using default image');
+            img.src = '/static/images/default-profile.png';
+        }
+    }
+
+    // Preload image function
+    function preloadImage(src, onLoad, onError) {
+        const img = new Image();
+        img.onload = onLoad;
+        img.onerror = onError;
+        img.src = src;
+    }
+
+    // Hamburger menu toggle function (global)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const hamburger = document.getElementById('hamburgerBtn');
+        
+        if (sidebar && overlay && hamburger) {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            
+            // Prevent body scroll when sidebar is open
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
+    }
+
+    // Close sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const hamburger = document.getElementById('hamburgerBtn');
+        
+        if (sidebar && hamburger && sidebar.classList.contains('active') && 
+            !sidebar.contains(event.target) && 
+            !hamburger.contains(event.target)) {
+            toggleSidebar();
+        }
+    });
+
+    // Close sidebar on window resize (if desktop)
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            
+            if (sidebar && overlay && hamburger) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                hamburger.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+    });
+
+    // Global image error handling on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add error handlers to all profile images
+        const profileImages = document.querySelectorAll('img[src*="/uploads/"], img[src*="/profile-image/"]');
+        profileImages.forEach(function(img) {
+            img.addEventListener('error', function() {
+                handleImageError(this);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,618 @@
+{% extends "base.html" %}
+
+{% block title %}My RMIT Connect Profile{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Welcome Header -->
+            <div class="text-center mb-5">
+                <i class="bi bi-people-fill display-1 mb-3" style="color: var(--rmit-red);"></i>
+                <h1 class="display-5 fw-bold">Welcome to RMIT Connect!</h1>
+                <p class="lead" style="color: var(--rmit-blue);">Your bold, collaborative RMIT crew awaits - start building connections today</p>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-person-vcard"></i> Your RMIT Connect Profile
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 350px;">
+                        <!-- Profile Info -->
+                        <div class="w-100">
+                            <!-- Profile Image Section -->
+                            <div class="row mb-4">
+                                <div class="col-12 text-center">
+                                    <div class="profile-image-container">
+                                        <img id="profileImage" src="{{ user.get_profile_image_url() }}" 
+                                             alt="Profile Image" 
+                                             class="profile-image rounded-circle border border-3"
+                                             style="width: 150px; height: 150px; object-fit: cover; border-color: var(--rmit-red) !important; filter: none; -webkit-filter: none; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"
+                                             onerror="this.onerror=null; this.src='/static/images/default-profile.png';">
+                                        <div class="profile-image-overlay" onclick="document.getElementById('profileImageInput').click();">
+                                            <i class="bi bi-camera-fill"></i>
+                                            <span>Change Photo</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" onchange="uploadProfileImage(this)">
+                                    <div class="mt-2">
+                                        <small class="text-muted">Click on the image to upload a new profile photo</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-4 text-center justify-content-center align-items-center">
+                                <div class="col-md-6 mb-2">
+                                    <h6 style="color: var(--rmit-blue);"><i class="bi bi-person-badge-fill me-2"></i>Name</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.name or '' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-calendar-fill me-2"></i>Age</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{% if user.age and user.age != 'None' %}{{ user.age }} years old{% else %}{% endif %}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-mortarboard-fill me-2"></i>Education</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.education or '' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-geo-alt-fill me-2"></i>Country</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.country or '' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-telephone-fill me-2"></i>Contact</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">
+                                        {% if user.phone_number and user.phone_number != 'None' %}
+                                            <span style="color: var(--rmit-blue);">📞</span> {{ user.phone_number }}
+                                        {% elif user.instagram and user.instagram != 'None' %}
+                                            <span style="color: var(--rmit-blue);">📷</span> @{{ user.instagram }}
+                                        {% else %}
+                                            
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-envelope-fill me-2"></i>Email</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.email }}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.interests or '' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Bio Section - Full Width -->
+                            {% if user.bio %}
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted"><i class="bi bi-person-lines-fill me-2"></i>About Me</h6>
+                                    <div class="p-3 rounded" style="background-color: #f8f9fa; border-left: 4px solid var(--rmit-red);">
+                                        <p class="mb-0 fs-6">{{ user.bio }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            </div> <!-- Close profile info row -->
+                        </div> <!-- Close profile info column -->
+                    </div> <!-- Close main row -->
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('explore') }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-compass-fill"></i> Explore Students
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('connections') }}" class="btn btn-outline-dark" style="border-color: var(--rmit-blue); color: var(--rmit-blue);"
+                                   onmouseover="this.style.backgroundColor='var(--rmit-blue)'; this.style.color='white';" 
+                                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--rmit-blue)';">
+                                    <i class="bi bi-heart-fill"></i> My Connections 
+                                    {% if mutual_matches %}
+                                        <span class="badge bg-danger ms-1">{{ mutual_matches|length }}</span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-primary" onclick="showAccountSettings()">
+                                    <i class="bi bi-gear"></i> Edit profile
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('history') }}" class="btn btn-outline-dark" style="border-color: var(--rmit-blue); color: var(--rmit-blue);" 
+                                   onmouseover="this.style.backgroundColor='var(--rmit-blue)'; this.style.color='white';" 
+                                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--rmit-blue)';">
+                                    <i class="bi bi-clock-history"></i> My History
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                                    <i class="bi bi-box-arrow-right"></i> Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Account Settings -->
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('profile') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Account Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ user.name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" class="form-control" id="age" name="age" value="{{ user.age or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="education" class="form-label">Education</label>
+                        <input type="text" class="form-control" id="education" name="education" value="{{ user.education or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="country" name="country" value="{{ user.country or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_type" class="form-label">Contact Information</label>
+                        <div class="input-group">
+                            <select class="form-select" id="contact_type" name="contact_type" style="max-width: 150px;">
+                                <option value="phone" {% if user.phone_number %}selected{% endif %}>Phone</option>
+                                <option value="instagram" {% if user.instagram %}selected{% endif %}>Instagram</option>
+                            </select>
+                            <input type="text" class="form-control" id="contact_value" name="contact_value" 
+                                   value="{% if user.phone_number and user.phone_number != 'None' %}{{ user.phone_number }}{% elif user.instagram and user.instagram != 'None' %}{{ user.instagram }}{% endif %}"
+                                   placeholder="Enter contact info">
+                        </div>
+                        <div class="form-text" id="contact_help">Choose contact type and enter your information for connections to reach you</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interests" class="form-label">Interests & Hobbies</label>
+                        <textarea class="form-control" id="interests" name="interests" placeholder="Optional (e.g. music, sports, coding)">{{ user.interests or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Security Info -->
+<div class="modal fade" id="securityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Security Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Your account is protected by:</h6>
+                <ul>
+                    <li><strong>Passwordless Authentication:</strong> No passwords to steal or forget - access via secure email links
+                    </li>
+                    <li><strong>Permanent Link Security:</strong> Each login link is unique and permanent - no expiration!</li>
+                    <li><strong>Session Management:</strong> Secure session cookies with proper expiration</li>
+                    <li><strong>Database Security:</strong> PostgreSQL database with encrypted connections</li>
+                    <li><strong>Input Validation:</strong> All user inputs are validated and sanitized</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Your permanent login link is unique to you and never expires - bookmark it for instant access!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Interactions -->
+<div class="modal fade" id="interactionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Users Who Liked You</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if liked_by %}
+                    <ul class="list-group">
+                        {% for liker in liked_by %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('explore_user', user_id=liker.id) }}" class="btn btn-outline-info w-100">
+                                <strong>{{ liker.name }}</strong> ({{ liker.email }})
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info">No interactions yet.</div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Onboarding Modal -->
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="{{ url_for('profile') }}" id="onboardingForm">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="onboardingModalLabel">
+            <i class="bi bi-person-plus-fill me-2"></i>Welcome to RMIT Connect!
+          </h5>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Complete your profile</strong> to start connecting with other RMIT students!
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="name" class="form-label">
+                  <i class="bi bi-person-fill me-1"></i>Full Name <span class="text-danger">*</span>
+                </label>
+                <input name="name" type="text" class="form-control" value="{{ user.name or '' }}" required>
+                <div class="form-text">Enter your full name as you'd like others to see it</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="age" class="form-label">
+                  <i class="bi bi-calendar-fill me-1"></i>Age <span class="text-danger">*</span>
+                </label>
+                <input name="age" type="number" class="form-control" value="{{ user.age or '' }}" min="13" max="120" required>
+                <div class="form-text">Must be between 13 and 120 years old</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="education" class="form-label">
+                  <i class="bi bi-mortarboard-fill me-1"></i>Education <span class="text-danger">*</span>
+                </label>
+                <input name="education" type="text" class="form-control" value="{{ user.education or '' }}" required>
+                <div class="form-text">e.g., Bachelor of Computer Science, RMIT University</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="country" class="form-label">
+                  <i class="bi bi-geo-alt-fill me-1"></i>Country <span class="text-danger">*</span>
+                </label>
+                <input name="country" type="text" class="form-control" value="{{ user.country or '' }}" required>
+                <div class="form-text">Where are you from?</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="contact_type" class="form-label">
+              <i class="bi bi-telephone-fill me-1"></i>Contact Information
+            </label>
+            <div class="input-group">
+              <select class="form-select" id="contact_type" name="contact_type" style="max-width: 150px;">
+                <option value="phone" {% if user.phone_number %}selected{% endif %}>Phone</option>
+                <option value="instagram" {% if user.instagram %}selected{% endif %}>Instagram</option>
+              </select>
+              <input type="text" class="form-control" id="contact_value" name="contact_value" 
+                     value="{% if user.phone_number and user.phone_number != 'None' %}{{ user.phone_number }}{% elif user.instagram and user.instagram != 'None' %}{{ user.instagram }}{% endif %}"
+                     placeholder="Enter contact info">
+            </div>
+            <div class="form-text" id="contact_help">Optional: Share contact info with your connections</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="interests" class="form-label">
+              <i class="bi bi-heart-fill me-1"></i>Interests & Hobbies
+            </label>
+            <textarea name="interests" class="form-control" rows="3" placeholder="Tell us about your interests (e.g., music, sports, coding, travel, gaming)">{{ user.interests or '' }}</textarea>
+            <div class="form-text">This helps others find common interests with you</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="bio" class="form-label">
+              <i class="bi bi-person-lines-fill me-1"></i>About Me
+            </label>
+            <textarea name="bio" class="form-control" rows="4" placeholder="Tell others about yourself... What makes you unique? What are you passionate about? What are you looking for in connections?" maxlength="500">{{ user.bio or '' }}</textarea>
+            <div class="form-text">Optional: Share a bit about yourself (max 500 characters)</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle me-1"></i>Complete Profile
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showAccountSettings() {
+    const modal = new bootstrap.Modal(document.getElementById('accountModal'));
+    modal.show();
+}
+
+function showSecurityInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('securityModal'));
+    modal.show();
+}
+
+function showInteractions() {
+    const modal = new bootstrap.Modal(document.getElementById('interactionsModal'));
+    modal.show();
+}
+
+// Notification system
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Contact field functionality
+function updateContactPlaceholder() {
+    const contactType = document.getElementById('contact_type');
+    const contactValue = document.getElementById('contact_value');
+    const contactHelp = document.getElementById('contact_help');
+    
+    if (contactType && contactValue && contactHelp) {
+        if (contactType.value === 'phone') {
+            contactValue.placeholder = '+61 123 456 789';
+            contactValue.type = 'tel';
+            contactHelp.textContent = 'Enter your phone number for connections to reach you';
+        } else if (contactType.value === 'instagram') {
+            contactValue.placeholder = '@username';
+            contactValue.type = 'text';
+            contactHelp.textContent = 'Enter your Instagram username (without @) for connections to reach you';
+        }
+    }
+}
+
+// Initialize contact field on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const contactType = document.getElementById('contact_type');
+    if (contactType) {
+        updateContactPlaceholder();
+        contactType.addEventListener('change', updateContactPlaceholder);
+    }
+});
+
+// Profile image upload functionality
+function uploadProfileImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Please select a valid image file (JPEG, PNG, GIF, or WEBP)', 'error');
+        return;
+    }
+    
+    // Validate file size (max 4MB)
+    const maxSize = 4 * 1024 * 1024; // 4MB
+    if (file.size > maxSize) {
+        showNotification('Image file size must be less than 4MB. Please choose a smaller image.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const profileImage = document.getElementById('profileImage');
+    const originalSrc = profileImage.src;
+    profileImage.style.opacity = '0.5';
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('profile_image', file);
+    
+    // Upload image
+    fetch('/upload_profile_image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update image source
+            profileImage.src = data.image_url + '?t=' + new Date().getTime(); // Cache bust
+            profileImage.style.opacity = '1';
+            showNotification(data.message, 'success');
+        } else {
+            showNotification(data.error || 'Upload failed', 'error');
+            profileImage.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification('An error occurred while uploading the image', 'error');
+        profileImage.style.opacity = '1';
+    });
+}
+</script>
+
+<style>
+.profile-image-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.profile-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 14px;
+}
+
+.profile-image-container:hover .profile-image-overlay {
+    opacity: 1;
+}
+
+.profile-image-overlay i {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.profile-image {
+    transition: opacity 0.3s ease;
+    filter: none !important;
+    -webkit-filter: none !important;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    /* Ensure colors are preserved */
+    color-scheme: normal;
+    color-adjust: exact;
+}
+</style>
+
+{% if is_new_user %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Onboarding modal triggered - is_new_user: true');
+    console.log('User profile_completed: {{ user.profile_completed|lower }}');
+    console.log('User name: {{ user.name or "None" }}');
+    console.log('User age: {{ user.age or "null" }}');
+    
+    // Show onboarding modal for new users
+    const modal = new bootstrap.Modal(document.getElementById('onboardingModal'));
+    modal.show();
+    
+    // Add form validation
+    const form = document.getElementById('onboardingForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const name = form.querySelector('input[name="name"]').value.trim();
+            const age = form.querySelector('input[name="age"]').value.trim();
+            const education = form.querySelector('input[name="education"]').value.trim();
+            const country = form.querySelector('input[name="country"]').value.trim();
+            
+            if (!name || !age || !education || !country) {
+                e.preventDefault();
+                showNotification('Please fill in all required fields marked with *', 'error');
+                return false;
+            }
+            
+            if (age < 13 || age > 120) {
+                e.preventDefault();
+                showNotification('Age must be between 13 and 120 years old', 'error');
+                return false;
+            }
+        });
+    }
+    
+    // Initialize contact field functionality for onboarding modal
+    const contactType = document.getElementById('contact_type');
+    const contactValue = document.getElementById('contact_value');
+    const contactHelp = document.getElementById('contact_help');
+    
+    if (contactType && contactValue && contactHelp) {
+        function updateOnboardingContactPlaceholder() {
+            if (contactType.value === 'phone') {
+                contactValue.placeholder = '+61 123 456 789';
+                contactValue.type = 'tel';
+                contactHelp.textContent = 'Optional: Enter your phone number for connections to reach you';
+            } else if (contactType.value === 'instagram') {
+                contactValue.placeholder = '@username';
+                contactValue.type = 'text';
+                contactHelp.textContent = 'Optional: Enter your Instagram username (without @) for connections to reach you';
+            }
+        }
+        
+        updateOnboardingContactPlaceholder();
+        contactType.addEventListener('change', updateOnboardingContactPlaceholder);
+    }
+});
+</script>
+{% else %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Onboarding modal NOT triggered - is_new_user: false');
+    console.log('User profile_completed: {{ user.profile_completed|lower }}');
+    console.log('User name: {{ user.name or "None" }}');
+    console.log('User age: {{ user.age or "null" }}');
+});
+</script>
+{% endif %}
+
+
+
+{% endblock %}
