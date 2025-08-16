@@ -1,2 +1,1 @@
-release: python -c "from main import application, db; db.create_all()"
-web: gunicorn --config gunicorn_config.py main:application
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload start:application

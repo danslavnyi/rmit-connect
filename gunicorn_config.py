@@ -2,15 +2,16 @@
 import multiprocessing
 import os
 
-# Server socket
-bind = "0.0.0.0:10000"
+# Server socket - Use PORT environment variable provided by Render
+port = os.environ.get("PORT", "10000")
+bind = f"0.0.0.0:{port}"
 backlog = 2048
 
-# Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1  # Optimal worker count
+# Worker processes - Reduce for faster startup on Render
+workers = min(multiprocessing.cpu_count() * 2 + 1, 4)  # Cap at 4 workers
 worker_class = "sync"
 worker_connections = 1000
-timeout = 30
+timeout = 120  # Increase timeout for Render
 keepalive = 3
 
 # Restart workers
