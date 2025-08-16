@@ -69,6 +69,7 @@ class DevelopmentConfig(Config):
     """Development configuration - less strict security for testing"""
     DEBUG = True
     SESSION_COOKIE_SECURE = False  # Allow HTTP in development
+    SESSION_COOKIE_SAMESITE = None  # Allow all same-site requests in dev
     FORCE_HTTPS = False
 
     # Email configuration for development
