@@ -411,7 +411,6 @@ def profile():
         education = request.form.get('education', '').strip()
         interests = request.form.get('interests', '').strip()
         country = request.form.get('country', '').strip()
-        bio = request.form.get('bio', '').strip()
 
         # Handle dynamic contact fields
         contact_type = request.form.get('contact_type', '').strip()
@@ -441,7 +440,6 @@ def profile():
         current_user.education = education
         current_user.interests = interests
         current_user.country = country
-        current_user.bio = bio if bio else None  # Store bio or None if empty
 
         # Handle contact information storage
         if contact_type == 'phone':

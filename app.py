@@ -105,13 +105,14 @@ with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
     import routes  # noqa: F401
-    
+
     # Only create tables if not in production or if tables don't exist
     try:
         db.create_all()
         logging.info("Database tables created successfully")
     except Exception as e:
-        logging.warning(f"Database table creation issue (may already exist): {e}")
+        logging.warning(
+            f"Database table creation issue (may already exist): {e}")
 
     # Ensure upload folder exists with proper permissions
     upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')
