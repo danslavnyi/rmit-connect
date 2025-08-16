@@ -44,6 +44,16 @@
                         <p class="mb-0 profile-data" style="line-height: 1.6;">{{ user.interests }}</p>
                     </div>
 
+                    <!-- Bio -->
+                    {% if user.bio %}
+                    <div class="mb-4">
+                        <h6 class="mb-2 d-flex flex-column align-items-center justify-content-center" style="color: var(--rmit-blue);">
+                            <i class="bi bi-chat-text-fill me-2" style="color: var(--rmit-red);"></i>Bio
+                        </h6>
+                        <p class="mb-0 profile-data" style="line-height: 1.6;">{{ user.bio }}</p>
+                    </div>
+                    {% endif %}
+
                     <!-- RMIT Connection Badge -->
                     <div class="text-center mb-4">
                         <span class="badge px-3 py-2" style="background: linear-gradient(135deg, var(--rmit-red), var(--rmit-blue)); color: white; font-size: 14px;">

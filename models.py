@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
     age = db.Column(db.Integer)
     education = db.Column(db.String(200))
     interests = db.Column(db.Text)
+    bio = db.Column(db.Text)
     country = db.Column(db.String(100))
     profile_completed = db.Column(db.Boolean, default=False)
     # Store filename of profile image

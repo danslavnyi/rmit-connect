@@ -9,6 +9,9 @@
             <p><strong>Education:</strong> {{ user.education }}</p>
             <p><strong>Country:</strong> {{ user.country }}</p>
             <p><strong>Interests:</strong> {{ user.interests }}</p>
+            {% if user.bio %}
+            <p><strong>Bio:</strong> {{ user.bio }}</p>
+            {% endif %}
             <div class="d-flex gap-2 my-3" id="action-buttons">
                 <button class="btn btn-success" id="like-btn">
                     <i class="bi bi-heart-fill"></i> Like

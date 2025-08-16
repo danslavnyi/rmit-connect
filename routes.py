@@ -410,7 +410,12 @@ def profile():
         age = request.form.get('age', '').strip()
         education = request.form.get('education', '').strip()
         interests = request.form.get('interests', '').strip()
+        bio = request.form.get('bio', '').strip()
         country = request.form.get('country', '').strip()
+
+        # Sanitize bio input for security
+        if bio:
+            bio = SecurityUtils.sanitize_user_input(bio)
 
         # Handle dynamic contact fields
         contact_type = request.form.get('contact_type', '').strip()
@@ -429,6 +434,10 @@ def profile():
         if not country:
             validation_errors.append('Country is required')
 
+        # Validate bio length (max 500 characters)
+        if bio and not SecurityUtils.validate_input_length(bio, 500):
+            validation_errors.append('Bio must be 500 characters or less')
+
         if validation_errors:
             for error in validation_errors:
                 flash(error, 'danger')
@@ -439,6 +448,7 @@ def profile():
         current_user.age = int(age)
         current_user.education = education
         current_user.interests = interests
+        current_user.bio = bio
         current_user.country = country
 
         # Handle contact information storage

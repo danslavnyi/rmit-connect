@@ -59,6 +59,9 @@
                     <p><strong><i class="bi bi-book"></i> Education:</strong><br>{{ user.education }}</p>
                     <p><strong><i class="bi bi-geo-alt"></i> Country:</strong><br>{{ user.country }}</p>
                     <p><strong><i class="bi bi-heart"></i> Interests:</strong><br>{{ user.interests }}</p>
+                    {% if user.bio %}
+                    <p><strong><i class="bi bi-chat-text"></i> Bio:</strong><br>{{ user.bio }}</p>
+                    {% endif %}
                 </div>
                 
                 <div class="d-flex justify-content-around">

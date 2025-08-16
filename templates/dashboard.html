@@ -83,6 +83,10 @@
                                     <h6 class="text-muted"><i class="bi bi-heart-fill me-2"></i>Interests & Hobbies</h6>
                                     <p class="mb-0 fs-6 profile-info-data">{{ user.interests or '' }}</p>
                                 </div>
+                                <div class="col-md-6 mb-2">
+                                    <h6 class="text-muted"><i class="bi bi-chat-text-fill me-2"></i>Bio</h6>
+                                    <p class="mb-0 fs-6 profile-info-data">{{ user.bio or '' }}</p>
+                                </div>
                                 <div class="col-md-6">
                                     <h6 class="text-muted"><i class="bi bi-calendar-check-fill me-2"></i>Member Since</h6>
                                     <p class="mb-0 fs-6 profile-info-data">{{ user.created_at.strftime('%B %d, %Y') }}</p>
@@ -194,6 +198,11 @@
                     <div class="mb-3">
                         <label for="interests" class="form-label">Interests & Hobbies</label>
                         <textarea class="form-control" id="interests" name="interests" placeholder="Optional (e.g. music, sports, coding)">{{ user.interests or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3" maxlength="500" placeholder="Tell us about yourself (optional)">{{ user.bio or '' }}</textarea>
+                        <div class="form-text">Share a bit about yourself - your goals, personality, or what you're looking for in connections (max 500 characters)</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -344,6 +353,14 @@
             </label>
             <textarea name="interests" class="form-control" rows="3" placeholder="Tell us about your interests (e.g., music, sports, coding, travel, gaming)">{{ user.interests or '' }}</textarea>
             <div class="form-text">This helps others find common interests with you</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="bio" class="form-label">
+              <i class="bi bi-chat-text-fill me-1"></i>Bio
+            </label>
+            <textarea name="bio" class="form-control" rows="3" maxlength="500" placeholder="Tell us about yourself (optional)">{{ user.bio or '' }}</textarea>
+            <div class="form-text">Share a bit about yourself - your goals, personality, or what you're looking for in connections (max 500 characters)</div>
           </div>
         </div>
         <div class="modal-footer">

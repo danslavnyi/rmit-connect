@@ -43,6 +43,12 @@
                                             <strong>Interests:</strong> {{ match.interests }}
                                         </p>
                                         
+                                        {% if match.bio %}
+                                        <p class="card-text">
+                                            <strong>Bio:</strong> {{ match.bio }}
+                                        </p>
+                                        {% endif %}
+                                        
                                         <div class="contact-info">
                                             <h6 class="text-muted mb-2">Contact {{ match.name }}:</h6>
                                             
