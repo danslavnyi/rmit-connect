@@ -39,17 +39,6 @@ def configure_logging() -> None:
         )
 
 
-def initialize_database() -> None:
-    """Initialize database tables if they don't exist."""
-    try:
-        with app.app_context():
-            db.create_all()
-            logging.info("Database tables initialized successfully")
-    except Exception as e:
-        logging.error(f"Database initialization failed: {e}")
-        sys.exit(1)
-
-
 def get_server_config() -> tuple[str, int, bool]:
     """Get server configuration from environment variables."""
     host = os.environ.get('HOST', '0.0.0.0')
@@ -68,8 +57,7 @@ def main() -> NoReturn:
     logging.info("Starting RMIT Connect application...")
     logging.info(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
 
-    # Initialize database
-    initialize_database()
+    # Database initialization is handled by app.py during import
 
     # Get server configuration
     host, port, debug = get_server_config()

@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from app import db
 from security import SecurityUtils
 import secrets
 import string
+
+# Use the db instance from app
+from app import db
 
 
 class User(UserMixin, db.Model):

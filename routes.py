@@ -1,7 +1,6 @@
 from app import app, db, mail
 from models import User, PermanentLoginLink, Like, Swipe
-from email_templates import get_login_email_html
-from liked_email_user import get_like_notification_email_html
+from email_templates import get_login_email_html, get_like_notification_email_html
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, make_response, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user

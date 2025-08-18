@@ -3,7 +3,6 @@ Security utilities for the RMIT Connect app
 Implements security best practices for data protection
 """
 
-import hashlib
 import secrets
 import re
 from functools import wraps
@@ -18,20 +17,6 @@ class SecurityUtils:
     def generate_secure_token(length=32):
         """Generate a cryptographically secure random token"""
         return secrets.token_urlsafe(length)
-
-    @staticmethod
-    def hash_sensitive_data(data):
-        """Hash sensitive data using SHA-256"""
-        if not data:
-            return None
-        return hashlib.sha256(data.encode('utf-8')).hexdigest()
-
-    @staticmethod
-    def validate_input_length(data, max_length=1000):
-        """Validate input length to prevent DoS attacks"""
-        if not data:
-            return True
-        return len(str(data)) <= max_length
 
     @staticmethod
     def sanitize_user_input(text):
@@ -126,19 +111,6 @@ def require_rate_limit(max_requests=100, window=3600):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
-
-def require_csrf_token(f):
-    """Decorator to require CSRF token for state-changing operations"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
-            token = request.form.get(
-                'csrf_token') or request.headers.get('X-CSRF-Token')
-            if not token or token != g.get('csrf_token'):
-                abort(403)  # Forbidden
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 def generate_csrf_token():
